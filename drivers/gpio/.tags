@@ -1,0 +1,793 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+DDRA0	.\gpio_cfg.h	189;"	d
+DDRA1	.\gpio_cfg.h	190;"	d
+DDRA10	.\gpio_cfg.h	199;"	d
+DDRA11	.\gpio_cfg.h	200;"	d
+DDRA12	.\gpio_cfg.h	201;"	d
+DDRA13	.\gpio_cfg.h	202;"	d
+DDRA14	.\gpio_cfg.h	203;"	d
+DDRA15	.\gpio_cfg.h	204;"	d
+DDRA16	.\gpio_cfg.h	205;"	d
+DDRA17	.\gpio_cfg.h	206;"	d
+DDRA18	.\gpio_cfg.h	207;"	d
+DDRA19	.\gpio_cfg.h	208;"	d
+DDRA2	.\gpio_cfg.h	191;"	d
+DDRA20	.\gpio_cfg.h	209;"	d
+DDRA21	.\gpio_cfg.h	210;"	d
+DDRA22	.\gpio_cfg.h	211;"	d
+DDRA23	.\gpio_cfg.h	212;"	d
+DDRA24	.\gpio_cfg.h	213;"	d
+DDRA25	.\gpio_cfg.h	214;"	d
+DDRA26	.\gpio_cfg.h	215;"	d
+DDRA27	.\gpio_cfg.h	216;"	d
+DDRA28	.\gpio_cfg.h	217;"	d
+DDRA29	.\gpio_cfg.h	218;"	d
+DDRA3	.\gpio_cfg.h	192;"	d
+DDRA30	.\gpio_cfg.h	219;"	d
+DDRA31	.\gpio_cfg.h	220;"	d
+DDRA4	.\gpio_cfg.h	193;"	d
+DDRA5	.\gpio_cfg.h	194;"	d
+DDRA6	.\gpio_cfg.h	195;"	d
+DDRA7	.\gpio_cfg.h	196;"	d
+DDRA8	.\gpio_cfg.h	197;"	d
+DDRA9	.\gpio_cfg.h	198;"	d
+DDRA_BYTE0	.\gpio_cfg.h	564;"	d
+DDRA_BYTE1	.\gpio_cfg.h	565;"	d
+DDRA_BYTE2	.\gpio_cfg.h	566;"	d
+DDRA_BYTE3	.\gpio_cfg.h	567;"	d
+DDRA_WORD0	.\gpio_cfg.h	650;"	d
+DDRA_WORD1	.\gpio_cfg.h	651;"	d
+DDRB0	.\gpio_cfg.h	223;"	d
+DDRB1	.\gpio_cfg.h	224;"	d
+DDRB10	.\gpio_cfg.h	233;"	d
+DDRB11	.\gpio_cfg.h	234;"	d
+DDRB12	.\gpio_cfg.h	235;"	d
+DDRB13	.\gpio_cfg.h	236;"	d
+DDRB14	.\gpio_cfg.h	237;"	d
+DDRB15	.\gpio_cfg.h	238;"	d
+DDRB16	.\gpio_cfg.h	239;"	d
+DDRB17	.\gpio_cfg.h	240;"	d
+DDRB18	.\gpio_cfg.h	241;"	d
+DDRB19	.\gpio_cfg.h	242;"	d
+DDRB2	.\gpio_cfg.h	225;"	d
+DDRB20	.\gpio_cfg.h	243;"	d
+DDRB21	.\gpio_cfg.h	244;"	d
+DDRB22	.\gpio_cfg.h	245;"	d
+DDRB23	.\gpio_cfg.h	246;"	d
+DDRB24	.\gpio_cfg.h	247;"	d
+DDRB25	.\gpio_cfg.h	248;"	d
+DDRB26	.\gpio_cfg.h	249;"	d
+DDRB27	.\gpio_cfg.h	250;"	d
+DDRB28	.\gpio_cfg.h	251;"	d
+DDRB29	.\gpio_cfg.h	252;"	d
+DDRB3	.\gpio_cfg.h	226;"	d
+DDRB30	.\gpio_cfg.h	253;"	d
+DDRB31	.\gpio_cfg.h	254;"	d
+DDRB4	.\gpio_cfg.h	227;"	d
+DDRB5	.\gpio_cfg.h	228;"	d
+DDRB6	.\gpio_cfg.h	229;"	d
+DDRB7	.\gpio_cfg.h	230;"	d
+DDRB8	.\gpio_cfg.h	231;"	d
+DDRB9	.\gpio_cfg.h	232;"	d
+DDRB_BYTE0	.\gpio_cfg.h	570;"	d
+DDRB_BYTE1	.\gpio_cfg.h	571;"	d
+DDRB_BYTE2	.\gpio_cfg.h	572;"	d
+DDRB_BYTE3	.\gpio_cfg.h	573;"	d
+DDRB_WORD0	.\gpio_cfg.h	655;"	d
+DDRB_WORD1	.\gpio_cfg.h	656;"	d
+DDRC0	.\gpio_cfg.h	257;"	d
+DDRC1	.\gpio_cfg.h	258;"	d
+DDRC10	.\gpio_cfg.h	267;"	d
+DDRC11	.\gpio_cfg.h	268;"	d
+DDRC12	.\gpio_cfg.h	269;"	d
+DDRC13	.\gpio_cfg.h	270;"	d
+DDRC14	.\gpio_cfg.h	271;"	d
+DDRC15	.\gpio_cfg.h	272;"	d
+DDRC16	.\gpio_cfg.h	273;"	d
+DDRC17	.\gpio_cfg.h	274;"	d
+DDRC18	.\gpio_cfg.h	275;"	d
+DDRC19	.\gpio_cfg.h	276;"	d
+DDRC2	.\gpio_cfg.h	259;"	d
+DDRC20	.\gpio_cfg.h	277;"	d
+DDRC21	.\gpio_cfg.h	278;"	d
+DDRC22	.\gpio_cfg.h	279;"	d
+DDRC23	.\gpio_cfg.h	280;"	d
+DDRC24	.\gpio_cfg.h	281;"	d
+DDRC25	.\gpio_cfg.h	282;"	d
+DDRC26	.\gpio_cfg.h	283;"	d
+DDRC27	.\gpio_cfg.h	284;"	d
+DDRC28	.\gpio_cfg.h	285;"	d
+DDRC29	.\gpio_cfg.h	286;"	d
+DDRC3	.\gpio_cfg.h	260;"	d
+DDRC30	.\gpio_cfg.h	287;"	d
+DDRC31	.\gpio_cfg.h	288;"	d
+DDRC4	.\gpio_cfg.h	261;"	d
+DDRC5	.\gpio_cfg.h	262;"	d
+DDRC6	.\gpio_cfg.h	263;"	d
+DDRC7	.\gpio_cfg.h	264;"	d
+DDRC8	.\gpio_cfg.h	265;"	d
+DDRC9	.\gpio_cfg.h	266;"	d
+DDRC_BYTE0	.\gpio_cfg.h	576;"	d
+DDRC_BYTE1	.\gpio_cfg.h	577;"	d
+DDRC_BYTE2	.\gpio_cfg.h	578;"	d
+DDRC_BYTE3	.\gpio_cfg.h	579;"	d
+DDRC_WORD0	.\gpio_cfg.h	660;"	d
+DDRC_WORD1	.\gpio_cfg.h	661;"	d
+DDRD0	.\gpio_cfg.h	291;"	d
+DDRD1	.\gpio_cfg.h	292;"	d
+DDRD10	.\gpio_cfg.h	301;"	d
+DDRD11	.\gpio_cfg.h	302;"	d
+DDRD12	.\gpio_cfg.h	303;"	d
+DDRD13	.\gpio_cfg.h	304;"	d
+DDRD14	.\gpio_cfg.h	305;"	d
+DDRD15	.\gpio_cfg.h	306;"	d
+DDRD16	.\gpio_cfg.h	307;"	d
+DDRD17	.\gpio_cfg.h	308;"	d
+DDRD18	.\gpio_cfg.h	309;"	d
+DDRD19	.\gpio_cfg.h	310;"	d
+DDRD2	.\gpio_cfg.h	293;"	d
+DDRD20	.\gpio_cfg.h	311;"	d
+DDRD21	.\gpio_cfg.h	312;"	d
+DDRD22	.\gpio_cfg.h	313;"	d
+DDRD23	.\gpio_cfg.h	314;"	d
+DDRD24	.\gpio_cfg.h	315;"	d
+DDRD25	.\gpio_cfg.h	316;"	d
+DDRD26	.\gpio_cfg.h	317;"	d
+DDRD27	.\gpio_cfg.h	318;"	d
+DDRD28	.\gpio_cfg.h	319;"	d
+DDRD29	.\gpio_cfg.h	320;"	d
+DDRD3	.\gpio_cfg.h	294;"	d
+DDRD30	.\gpio_cfg.h	321;"	d
+DDRD31	.\gpio_cfg.h	322;"	d
+DDRD4	.\gpio_cfg.h	295;"	d
+DDRD5	.\gpio_cfg.h	296;"	d
+DDRD6	.\gpio_cfg.h	297;"	d
+DDRD7	.\gpio_cfg.h	298;"	d
+DDRD8	.\gpio_cfg.h	299;"	d
+DDRD9	.\gpio_cfg.h	300;"	d
+DDRD_BYTE0	.\gpio_cfg.h	582;"	d
+DDRD_BYTE1	.\gpio_cfg.h	583;"	d
+DDRD_BYTE2	.\gpio_cfg.h	584;"	d
+DDRD_BYTE3	.\gpio_cfg.h	585;"	d
+DDRD_WORD0	.\gpio_cfg.h	665;"	d
+DDRD_WORD1	.\gpio_cfg.h	666;"	d
+DDRE0	.\gpio_cfg.h	325;"	d
+DDRE1	.\gpio_cfg.h	326;"	d
+DDRE10	.\gpio_cfg.h	335;"	d
+DDRE11	.\gpio_cfg.h	336;"	d
+DDRE12	.\gpio_cfg.h	337;"	d
+DDRE13	.\gpio_cfg.h	338;"	d
+DDRE14	.\gpio_cfg.h	339;"	d
+DDRE15	.\gpio_cfg.h	340;"	d
+DDRE16	.\gpio_cfg.h	341;"	d
+DDRE17	.\gpio_cfg.h	342;"	d
+DDRE18	.\gpio_cfg.h	343;"	d
+DDRE19	.\gpio_cfg.h	344;"	d
+DDRE2	.\gpio_cfg.h	327;"	d
+DDRE20	.\gpio_cfg.h	345;"	d
+DDRE21	.\gpio_cfg.h	346;"	d
+DDRE22	.\gpio_cfg.h	347;"	d
+DDRE23	.\gpio_cfg.h	348;"	d
+DDRE24	.\gpio_cfg.h	349;"	d
+DDRE25	.\gpio_cfg.h	350;"	d
+DDRE26	.\gpio_cfg.h	351;"	d
+DDRE27	.\gpio_cfg.h	352;"	d
+DDRE28	.\gpio_cfg.h	353;"	d
+DDRE29	.\gpio_cfg.h	354;"	d
+DDRE3	.\gpio_cfg.h	328;"	d
+DDRE30	.\gpio_cfg.h	355;"	d
+DDRE31	.\gpio_cfg.h	356;"	d
+DDRE4	.\gpio_cfg.h	329;"	d
+DDRE5	.\gpio_cfg.h	330;"	d
+DDRE6	.\gpio_cfg.h	331;"	d
+DDRE7	.\gpio_cfg.h	332;"	d
+DDRE8	.\gpio_cfg.h	333;"	d
+DDRE9	.\gpio_cfg.h	334;"	d
+DDRE_BYTE0	.\gpio_cfg.h	588;"	d
+DDRE_BYTE1	.\gpio_cfg.h	589;"	d
+DDRE_BYTE2	.\gpio_cfg.h	590;"	d
+DDRE_BYTE3	.\gpio_cfg.h	591;"	d
+DDRE_WORD0	.\gpio_cfg.h	670;"	d
+DDRE_WORD1	.\gpio_cfg.h	671;"	d
+GPI	.\gpio.h	/^    GPI         = 0,                          \/\/∂®“Âπ‹Ω≈ ‰»Î∑ΩœÚ      GPIOx_PDDRn¿Ô£¨0±Ì æ ‰»Î£¨1±Ì æ ‰≥ˆ$/;"	e	enum:GPIO_CFG
+GPIO_CFG	.\gpio.h	/^typedef enum GPIO_CFG$/;"	g
+GPIO_CFG	.\gpio.h	/^} GPIO_CFG;  \/\/◊ÓµÕŒªŒ™0£¨øœ∂® « ‰»Î£ªGPI_UP ∫Õ GPI_UP_PFµƒ◊ÓµÕŒªŒ™1£¨∆‰À˚Œ™ ‰≥ˆ$/;"	t	typeref:enum:GPIO_CFG
+GPIO_DDR_16bit	.\gpio.h	84;"	d
+GPIO_DDR_1bit	.\gpio.h	63;"	d
+GPIO_DDR_2bit	.\gpio.h	68;"	d
+GPIO_DDR_32bit	.\gpio.h	89;"	d
+GPIO_DDR_4bit	.\gpio.h	73;"	d
+GPIO_DDR_8bit	.\gpio.h	78;"	d
+GPIO_GET_16bit	.\gpio.h	85;"	d
+GPIO_GET_1bit	.\gpio.h	64;"	d
+GPIO_GET_2bit	.\gpio.h	69;"	d
+GPIO_GET_32bit	.\gpio.h	90;"	d
+GPIO_GET_4bit	.\gpio.h	74;"	d
+GPIO_GET_8bit	.\gpio.h	79;"	d
+GPIO_Get	.\gpio.h	58;"	d
+GPIO_SET	.\gpio.h	56;"	d
+GPIO_SET_0	.\gpio.h	94;"	d
+GPIO_SET_1	.\gpio.h	93;"	d
+GPIO_SET_16bit	.\gpio.h	83;"	d
+GPIO_SET_1bit	.\gpio.h	62;"	d
+GPIO_SET_2bit	.\gpio.h	67;"	d
+GPIO_SET_32bit	.\gpio.h	88;"	d
+GPIO_SET_4bit	.\gpio.h	72;"	d
+GPIO_SET_8bit	.\gpio.h	77;"	d
+GPIO_TURN	.\gpio.h	57;"	d
+GPIOx	.\gpio.c	/^volatile struct GPIO_MemMap *GPIOx[5] = {PTA_BASE_PTR, PTB_BASE_PTR, PTC_BASE_PTR, PTD_BASE_PTR, PTE_BASE_PTR}; \/\/ÂÆö‰πâ‰∫î‰∏™ÊåáÈíàÊï∞ÁªÑ‰øùÂ≠ò GPIOx ÁöÑÂú∞ÂùÄ$/;"	v	typeref:struct:GPIO_MemMap
+GPI_DOWN	.\gpio.h	/^    GPI_DOWN    = 0x02,                       \/\/ ‰»Îœ¬¿≠              PORTx_PCRn–Ë“™PE=1£¨PS=0$/;"	e	enum:GPIO_CFG
+GPI_DOWN_PF	.\gpio.h	/^    GPI_DOWN_PF = GPI_DOWN | GPI_PF ,         \/\/ ‰»Îœ¬¿≠£¨¥¯Œﬁ‘¥¬À≤®∆˜$/;"	e	enum:GPIO_CFG
+GPI_PF	.\gpio.h	/^    GPI_PF      = 0x10,                       \/\/ ‰»Î£¨¥¯Œﬁ‘¥¬À≤®∆˜,¬À≤®∑∂Œß£∫10 MHz ~ 30 MHz °£≤ª÷ß≥÷∏ﬂÀŸΩ”ø⁄£®>=2MHz£©  0b10000           Passive Filter Enable$/;"	e	enum:GPIO_CFG
+GPI_UP	.\gpio.h	/^    GPI_UP      = 0x03,                       \/\/ ‰»Î…œ¿≠              PORTx_PCRn–Ë“™PE=1£¨PS=1$/;"	e	enum:GPIO_CFG
+GPI_UP_PF	.\gpio.h	/^    GPI_UP_PF   = GPI_UP   | GPI_PF ,         \/\/ ‰»Î…œ¿≠£¨¥¯Œﬁ‘¥¬À≤®∆˜$/;"	e	enum:GPIO_CFG
+GPO	.\gpio.h	/^    GPO         = 1,                          \/\/∂®“Âπ‹Ω≈ ‰≥ˆ∑ΩœÚ$/;"	e	enum:GPIO_CFG
+GPO_HDS	.\gpio.h	/^    GPO_HDS     = 0x41,                        \/\/ ‰≥ˆ∏ﬂ«˝∂Øƒ‹¡¶   0b100 0001    High drive strength$/;"	e	enum:GPIO_CFG
+GPO_HDS_SSR	.\gpio.h	/^    GPO_HDS_SSR = GPO_HDS | GPO_SSR,           \/\/ ‰≥ˆ∏ﬂ«˝∂Øƒ‹¡¶°¢¬˝±‰ªØ¬ $/;"	e	enum:GPIO_CFG
+GPO_SSR	.\gpio.h	/^    GPO_SSR     = 0x05,                        \/\/ ‰≥ˆ¬˝±‰ªØ¬           0b101     Slow slew rate$/;"	e	enum:GPIO_CFG
+HIGH	.\gpio.h	43;"	d
+LOW	.\gpio.h	44;"	d
+PORTA	.\gpio.h	/^    PORTA,$/;"	e	enum:PORTx
+PORTB	.\gpio.h	/^    PORTB,$/;"	e	enum:PORTx
+PORTC	.\gpio.h	/^    PORTC,$/;"	e	enum:PORTx
+PORTD	.\gpio.h	/^    PORTD,$/;"	e	enum:PORTx
+PORTE	.\gpio.h	/^    PORTE$/;"	e	enum:PORTx
+PORTX	.\gpio.c	/^volatile struct PORT_MemMap *PORTX[5] = {PORTA_BASE_PTR, PORTB_BASE_PTR, PORTC_BASE_PTR, PORTD_BASE_PTR, PORTE_BASE_PTR};$/;"	v	typeref:struct:PORT_MemMap
+PORTx	.\gpio.h	/^typedef enum PORTx$/;"	g
+PORTx	.\gpio.h	/^} PORTx;$/;"	t	typeref:enum:PORTx
+PTA0	.\gpio_cfg.h	/^    PTA0,$/;"	e	enum:PTxn
+PTA0_IN	.\gpio_cfg.h	360;"	d
+PTA0_OUT	.\gpio_cfg.h	17;"	d
+PTA1	.\gpio_cfg.h	/^    PTA1,$/;"	e	enum:PTxn
+PTA10	.\gpio_cfg.h	/^    PTA10,$/;"	e	enum:PTxn
+PTA10_IN	.\gpio_cfg.h	370;"	d
+PTA10_OUT	.\gpio_cfg.h	27;"	d
+PTA11	.\gpio_cfg.h	/^    PTA11,$/;"	e	enum:PTxn
+PTA11_IN	.\gpio_cfg.h	371;"	d
+PTA11_OUT	.\gpio_cfg.h	28;"	d
+PTA12	.\gpio_cfg.h	/^    PTA12,$/;"	e	enum:PTxn
+PTA12_IN	.\gpio_cfg.h	372;"	d
+PTA12_OUT	.\gpio_cfg.h	29;"	d
+PTA13	.\gpio_cfg.h	/^    PTA13,$/;"	e	enum:PTxn
+PTA13_IN	.\gpio_cfg.h	373;"	d
+PTA13_OUT	.\gpio_cfg.h	30;"	d
+PTA14	.\gpio_cfg.h	/^    PTA14,$/;"	e	enum:PTxn
+PTA14_IN	.\gpio_cfg.h	374;"	d
+PTA14_OUT	.\gpio_cfg.h	31;"	d
+PTA15	.\gpio_cfg.h	/^    PTA15,$/;"	e	enum:PTxn
+PTA15_IN	.\gpio_cfg.h	375;"	d
+PTA15_OUT	.\gpio_cfg.h	32;"	d
+PTA16	.\gpio_cfg.h	/^    PTA16,$/;"	e	enum:PTxn
+PTA16_IN	.\gpio_cfg.h	376;"	d
+PTA16_OUT	.\gpio_cfg.h	33;"	d
+PTA17	.\gpio_cfg.h	/^    PTA17,$/;"	e	enum:PTxn
+PTA17_IN	.\gpio_cfg.h	377;"	d
+PTA17_OUT	.\gpio_cfg.h	34;"	d
+PTA18	.\gpio_cfg.h	/^    PTA18,$/;"	e	enum:PTxn
+PTA18_IN	.\gpio_cfg.h	378;"	d
+PTA18_OUT	.\gpio_cfg.h	35;"	d
+PTA19	.\gpio_cfg.h	/^    PTA19,$/;"	e	enum:PTxn
+PTA19_IN	.\gpio_cfg.h	379;"	d
+PTA19_OUT	.\gpio_cfg.h	36;"	d
+PTA1_IN	.\gpio_cfg.h	361;"	d
+PTA1_OUT	.\gpio_cfg.h	18;"	d
+PTA2	.\gpio_cfg.h	/^    PTA2,$/;"	e	enum:PTxn
+PTA20	.\gpio_cfg.h	/^    PTA20,$/;"	e	enum:PTxn
+PTA20_IN	.\gpio_cfg.h	380;"	d
+PTA20_OUT	.\gpio_cfg.h	37;"	d
+PTA21	.\gpio_cfg.h	/^    PTA21,$/;"	e	enum:PTxn
+PTA21_IN	.\gpio_cfg.h	381;"	d
+PTA21_OUT	.\gpio_cfg.h	38;"	d
+PTA22	.\gpio_cfg.h	/^    PTA22,$/;"	e	enum:PTxn
+PTA22_IN	.\gpio_cfg.h	382;"	d
+PTA22_OUT	.\gpio_cfg.h	39;"	d
+PTA23	.\gpio_cfg.h	/^    PTA23,$/;"	e	enum:PTxn
+PTA23_IN	.\gpio_cfg.h	383;"	d
+PTA23_OUT	.\gpio_cfg.h	40;"	d
+PTA24	.\gpio_cfg.h	/^    PTA24,$/;"	e	enum:PTxn
+PTA24_IN	.\gpio_cfg.h	384;"	d
+PTA24_OUT	.\gpio_cfg.h	41;"	d
+PTA25	.\gpio_cfg.h	/^    PTA25,$/;"	e	enum:PTxn
+PTA25_IN	.\gpio_cfg.h	385;"	d
+PTA25_OUT	.\gpio_cfg.h	42;"	d
+PTA26	.\gpio_cfg.h	/^    PTA26,$/;"	e	enum:PTxn
+PTA26_IN	.\gpio_cfg.h	386;"	d
+PTA26_OUT	.\gpio_cfg.h	43;"	d
+PTA27	.\gpio_cfg.h	/^    PTA27,$/;"	e	enum:PTxn
+PTA27_IN	.\gpio_cfg.h	387;"	d
+PTA27_OUT	.\gpio_cfg.h	44;"	d
+PTA28	.\gpio_cfg.h	/^    PTA28,$/;"	e	enum:PTxn
+PTA28_IN	.\gpio_cfg.h	388;"	d
+PTA28_OUT	.\gpio_cfg.h	45;"	d
+PTA29	.\gpio_cfg.h	/^    PTA29,$/;"	e	enum:PTxn
+PTA29_IN	.\gpio_cfg.h	389;"	d
+PTA29_OUT	.\gpio_cfg.h	46;"	d
+PTA2_IN	.\gpio_cfg.h	362;"	d
+PTA2_OUT	.\gpio_cfg.h	19;"	d
+PTA3	.\gpio_cfg.h	/^    PTA3,$/;"	e	enum:PTxn
+PTA30	.\gpio_cfg.h	/^    PTA30,$/;"	e	enum:PTxn
+PTA30_IN	.\gpio_cfg.h	390;"	d
+PTA30_OUT	.\gpio_cfg.h	47;"	d
+PTA31	.\gpio_cfg.h	/^    PTA31,$/;"	e	enum:PTxn
+PTA31_IN	.\gpio_cfg.h	391;"	d
+PTA31_OUT	.\gpio_cfg.h	48;"	d
+PTA3_IN	.\gpio_cfg.h	363;"	d
+PTA3_OUT	.\gpio_cfg.h	20;"	d
+PTA4	.\gpio_cfg.h	/^    PTA4,$/;"	e	enum:PTxn
+PTA4_IN	.\gpio_cfg.h	364;"	d
+PTA4_OUT	.\gpio_cfg.h	21;"	d
+PTA5	.\gpio_cfg.h	/^    PTA5,$/;"	e	enum:PTxn
+PTA5_IN	.\gpio_cfg.h	365;"	d
+PTA5_OUT	.\gpio_cfg.h	22;"	d
+PTA6	.\gpio_cfg.h	/^    PTA6,$/;"	e	enum:PTxn
+PTA6_IN	.\gpio_cfg.h	366;"	d
+PTA6_OUT	.\gpio_cfg.h	23;"	d
+PTA7	.\gpio_cfg.h	/^    PTA7,$/;"	e	enum:PTxn
+PTA7_IN	.\gpio_cfg.h	367;"	d
+PTA7_OUT	.\gpio_cfg.h	24;"	d
+PTA8	.\gpio_cfg.h	/^    PTA8,$/;"	e	enum:PTxn
+PTA8_IN	.\gpio_cfg.h	368;"	d
+PTA8_OUT	.\gpio_cfg.h	25;"	d
+PTA9	.\gpio_cfg.h	/^    PTA9,$/;"	e	enum:PTxn
+PTA9_IN	.\gpio_cfg.h	369;"	d
+PTA9_OUT	.\gpio_cfg.h	26;"	d
+PTA_BYTE0_IN	.\gpio_cfg.h	595;"	d
+PTA_BYTE0_OUT	.\gpio_cfg.h	532;"	d
+PTA_BYTE1_IN	.\gpio_cfg.h	596;"	d
+PTA_BYTE1_OUT	.\gpio_cfg.h	533;"	d
+PTA_BYTE2_IN	.\gpio_cfg.h	597;"	d
+PTA_BYTE2_OUT	.\gpio_cfg.h	534;"	d
+PTA_BYTE3_IN	.\gpio_cfg.h	598;"	d
+PTA_BYTE3_OUT	.\gpio_cfg.h	535;"	d
+PTA_WORD0_IN	.\gpio_cfg.h	675;"	d
+PTA_WORD0_OUT	.\gpio_cfg.h	627;"	d
+PTA_WORD1_IN	.\gpio_cfg.h	676;"	d
+PTA_WORD1_OUT	.\gpio_cfg.h	628;"	d
+PTB0	.\gpio_cfg.h	/^    PTB0,$/;"	e	enum:PTxn
+PTB0_IN	.\gpio_cfg.h	394;"	d
+PTB0_OUT	.\gpio_cfg.h	51;"	d
+PTB1	.\gpio_cfg.h	/^    PTB1,$/;"	e	enum:PTxn
+PTB10	.\gpio_cfg.h	/^    PTB10,$/;"	e	enum:PTxn
+PTB10_IN	.\gpio_cfg.h	404;"	d
+PTB10_OUT	.\gpio_cfg.h	61;"	d
+PTB11	.\gpio_cfg.h	/^    PTB11,$/;"	e	enum:PTxn
+PTB11_IN	.\gpio_cfg.h	405;"	d
+PTB11_OUT	.\gpio_cfg.h	62;"	d
+PTB12	.\gpio_cfg.h	/^    PTB12,$/;"	e	enum:PTxn
+PTB12_IN	.\gpio_cfg.h	406;"	d
+PTB12_OUT	.\gpio_cfg.h	63;"	d
+PTB13	.\gpio_cfg.h	/^    PTB13,$/;"	e	enum:PTxn
+PTB13_IN	.\gpio_cfg.h	407;"	d
+PTB13_OUT	.\gpio_cfg.h	64;"	d
+PTB14	.\gpio_cfg.h	/^    PTB14,$/;"	e	enum:PTxn
+PTB14_IN	.\gpio_cfg.h	408;"	d
+PTB14_OUT	.\gpio_cfg.h	65;"	d
+PTB15	.\gpio_cfg.h	/^    PTB15,$/;"	e	enum:PTxn
+PTB15_IN	.\gpio_cfg.h	409;"	d
+PTB15_OUT	.\gpio_cfg.h	66;"	d
+PTB16	.\gpio_cfg.h	/^    PTB16,$/;"	e	enum:PTxn
+PTB16_IN	.\gpio_cfg.h	410;"	d
+PTB16_OUT	.\gpio_cfg.h	67;"	d
+PTB17	.\gpio_cfg.h	/^    PTB17,$/;"	e	enum:PTxn
+PTB17_IN	.\gpio_cfg.h	411;"	d
+PTB17_OUT	.\gpio_cfg.h	68;"	d
+PTB18	.\gpio_cfg.h	/^    PTB18,$/;"	e	enum:PTxn
+PTB18_IN	.\gpio_cfg.h	412;"	d
+PTB18_OUT	.\gpio_cfg.h	69;"	d
+PTB19	.\gpio_cfg.h	/^    PTB19,$/;"	e	enum:PTxn
+PTB19_IN	.\gpio_cfg.h	413;"	d
+PTB19_OUT	.\gpio_cfg.h	70;"	d
+PTB1_IN	.\gpio_cfg.h	395;"	d
+PTB1_OUT	.\gpio_cfg.h	52;"	d
+PTB2	.\gpio_cfg.h	/^    PTB2,$/;"	e	enum:PTxn
+PTB20	.\gpio_cfg.h	/^    PTB20,$/;"	e	enum:PTxn
+PTB20_IN	.\gpio_cfg.h	414;"	d
+PTB20_OUT	.\gpio_cfg.h	71;"	d
+PTB21	.\gpio_cfg.h	/^    PTB21,$/;"	e	enum:PTxn
+PTB21_IN	.\gpio_cfg.h	415;"	d
+PTB21_OUT	.\gpio_cfg.h	72;"	d
+PTB22	.\gpio_cfg.h	/^    PTB22,$/;"	e	enum:PTxn
+PTB22_IN	.\gpio_cfg.h	416;"	d
+PTB22_OUT	.\gpio_cfg.h	73;"	d
+PTB23	.\gpio_cfg.h	/^    PTB23,$/;"	e	enum:PTxn
+PTB23_IN	.\gpio_cfg.h	417;"	d
+PTB23_OUT	.\gpio_cfg.h	74;"	d
+PTB24	.\gpio_cfg.h	/^    PTB24,$/;"	e	enum:PTxn
+PTB24_IN	.\gpio_cfg.h	418;"	d
+PTB24_OUT	.\gpio_cfg.h	75;"	d
+PTB25	.\gpio_cfg.h	/^    PTB25,$/;"	e	enum:PTxn
+PTB25_IN	.\gpio_cfg.h	419;"	d
+PTB25_OUT	.\gpio_cfg.h	76;"	d
+PTB26	.\gpio_cfg.h	/^    PTB26,$/;"	e	enum:PTxn
+PTB26_IN	.\gpio_cfg.h	420;"	d
+PTB26_OUT	.\gpio_cfg.h	77;"	d
+PTB27	.\gpio_cfg.h	/^    PTB27,$/;"	e	enum:PTxn
+PTB27_IN	.\gpio_cfg.h	421;"	d
+PTB27_OUT	.\gpio_cfg.h	78;"	d
+PTB28	.\gpio_cfg.h	/^    PTB28,$/;"	e	enum:PTxn
+PTB28_IN	.\gpio_cfg.h	422;"	d
+PTB28_OUT	.\gpio_cfg.h	79;"	d
+PTB29	.\gpio_cfg.h	/^    PTB29,$/;"	e	enum:PTxn
+PTB29_IN	.\gpio_cfg.h	423;"	d
+PTB29_OUT	.\gpio_cfg.h	80;"	d
+PTB2_IN	.\gpio_cfg.h	396;"	d
+PTB2_OUT	.\gpio_cfg.h	53;"	d
+PTB3	.\gpio_cfg.h	/^    PTB3,$/;"	e	enum:PTxn
+PTB30	.\gpio_cfg.h	/^    PTB30,$/;"	e	enum:PTxn
+PTB30_IN	.\gpio_cfg.h	424;"	d
+PTB30_OUT	.\gpio_cfg.h	81;"	d
+PTB31	.\gpio_cfg.h	/^    PTB31,$/;"	e	enum:PTxn
+PTB31_IN	.\gpio_cfg.h	425;"	d
+PTB31_OUT	.\gpio_cfg.h	82;"	d
+PTB3_IN	.\gpio_cfg.h	397;"	d
+PTB3_OUT	.\gpio_cfg.h	54;"	d
+PTB4	.\gpio_cfg.h	/^    PTB4,$/;"	e	enum:PTxn
+PTB4_IN	.\gpio_cfg.h	398;"	d
+PTB4_OUT	.\gpio_cfg.h	55;"	d
+PTB5	.\gpio_cfg.h	/^    PTB5,$/;"	e	enum:PTxn
+PTB5_IN	.\gpio_cfg.h	399;"	d
+PTB5_OUT	.\gpio_cfg.h	56;"	d
+PTB6	.\gpio_cfg.h	/^    PTB6,$/;"	e	enum:PTxn
+PTB6_IN	.\gpio_cfg.h	400;"	d
+PTB6_OUT	.\gpio_cfg.h	57;"	d
+PTB7	.\gpio_cfg.h	/^    PTB7,$/;"	e	enum:PTxn
+PTB7_IN	.\gpio_cfg.h	401;"	d
+PTB7_OUT	.\gpio_cfg.h	58;"	d
+PTB8	.\gpio_cfg.h	/^    PTB8,$/;"	e	enum:PTxn
+PTB8_IN	.\gpio_cfg.h	402;"	d
+PTB8_OUT	.\gpio_cfg.h	59;"	d
+PTB9	.\gpio_cfg.h	/^    PTB9,$/;"	e	enum:PTxn
+PTB9_IN	.\gpio_cfg.h	403;"	d
+PTB9_OUT	.\gpio_cfg.h	60;"	d
+PTB_BYTE0_IN	.\gpio_cfg.h	601;"	d
+PTB_BYTE0_OUT	.\gpio_cfg.h	538;"	d
+PTB_BYTE1_IN	.\gpio_cfg.h	602;"	d
+PTB_BYTE1_OUT	.\gpio_cfg.h	539;"	d
+PTB_BYTE2_IN	.\gpio_cfg.h	603;"	d
+PTB_BYTE2_OUT	.\gpio_cfg.h	540;"	d
+PTB_BYTE3_IN	.\gpio_cfg.h	604;"	d
+PTB_BYTE3_OUT	.\gpio_cfg.h	541;"	d
+PTB_WORD0_IN	.\gpio_cfg.h	680;"	d
+PTB_WORD0_OUT	.\gpio_cfg.h	631;"	d
+PTB_WORD1_IN	.\gpio_cfg.h	681;"	d
+PTB_WORD1_OUT	.\gpio_cfg.h	632;"	d
+PTC0	.\gpio_cfg.h	/^    PTC0,$/;"	e	enum:PTxn
+PTC0_IN	.\gpio_cfg.h	428;"	d
+PTC0_OUT	.\gpio_cfg.h	85;"	d
+PTC1	.\gpio_cfg.h	/^    PTC1,$/;"	e	enum:PTxn
+PTC10	.\gpio_cfg.h	/^    PTC10,$/;"	e	enum:PTxn
+PTC10_IN	.\gpio_cfg.h	438;"	d
+PTC10_OUT	.\gpio_cfg.h	95;"	d
+PTC11	.\gpio_cfg.h	/^    PTC11,$/;"	e	enum:PTxn
+PTC11_IN	.\gpio_cfg.h	439;"	d
+PTC11_OUT	.\gpio_cfg.h	96;"	d
+PTC12	.\gpio_cfg.h	/^    PTC12,$/;"	e	enum:PTxn
+PTC12_IN	.\gpio_cfg.h	440;"	d
+PTC12_OUT	.\gpio_cfg.h	97;"	d
+PTC13	.\gpio_cfg.h	/^    PTC13,$/;"	e	enum:PTxn
+PTC13_IN	.\gpio_cfg.h	441;"	d
+PTC13_OUT	.\gpio_cfg.h	98;"	d
+PTC14	.\gpio_cfg.h	/^    PTC14,$/;"	e	enum:PTxn
+PTC14_IN	.\gpio_cfg.h	442;"	d
+PTC14_OUT	.\gpio_cfg.h	99;"	d
+PTC15	.\gpio_cfg.h	/^    PTC15,$/;"	e	enum:PTxn
+PTC15_IN	.\gpio_cfg.h	443;"	d
+PTC15_OUT	.\gpio_cfg.h	100;"	d
+PTC16	.\gpio_cfg.h	/^    PTC16,$/;"	e	enum:PTxn
+PTC16_IN	.\gpio_cfg.h	444;"	d
+PTC16_OUT	.\gpio_cfg.h	101;"	d
+PTC17	.\gpio_cfg.h	/^    PTC17,$/;"	e	enum:PTxn
+PTC17_IN	.\gpio_cfg.h	445;"	d
+PTC17_OUT	.\gpio_cfg.h	102;"	d
+PTC18	.\gpio_cfg.h	/^    PTC18,$/;"	e	enum:PTxn
+PTC18_IN	.\gpio_cfg.h	446;"	d
+PTC18_OUT	.\gpio_cfg.h	103;"	d
+PTC19	.\gpio_cfg.h	/^    PTC19,$/;"	e	enum:PTxn
+PTC19_IN	.\gpio_cfg.h	447;"	d
+PTC19_OUT	.\gpio_cfg.h	104;"	d
+PTC1_IN	.\gpio_cfg.h	429;"	d
+PTC1_OUT	.\gpio_cfg.h	86;"	d
+PTC2	.\gpio_cfg.h	/^    PTC2,$/;"	e	enum:PTxn
+PTC20	.\gpio_cfg.h	/^    PTC20,$/;"	e	enum:PTxn
+PTC20_IN	.\gpio_cfg.h	448;"	d
+PTC20_OUT	.\gpio_cfg.h	105;"	d
+PTC21	.\gpio_cfg.h	/^    PTC21,$/;"	e	enum:PTxn
+PTC21_IN	.\gpio_cfg.h	449;"	d
+PTC21_OUT	.\gpio_cfg.h	106;"	d
+PTC22	.\gpio_cfg.h	/^    PTC22,$/;"	e	enum:PTxn
+PTC22_IN	.\gpio_cfg.h	450;"	d
+PTC22_OUT	.\gpio_cfg.h	107;"	d
+PTC23	.\gpio_cfg.h	/^    PTC23,$/;"	e	enum:PTxn
+PTC23_IN	.\gpio_cfg.h	451;"	d
+PTC23_OUT	.\gpio_cfg.h	108;"	d
+PTC24	.\gpio_cfg.h	/^    PTC24,$/;"	e	enum:PTxn
+PTC24_IN	.\gpio_cfg.h	452;"	d
+PTC24_OUT	.\gpio_cfg.h	109;"	d
+PTC25	.\gpio_cfg.h	/^    PTC25,$/;"	e	enum:PTxn
+PTC25_IN	.\gpio_cfg.h	453;"	d
+PTC25_OUT	.\gpio_cfg.h	110;"	d
+PTC26	.\gpio_cfg.h	/^    PTC26,$/;"	e	enum:PTxn
+PTC26_IN	.\gpio_cfg.h	454;"	d
+PTC26_OUT	.\gpio_cfg.h	111;"	d
+PTC27	.\gpio_cfg.h	/^    PTC27,$/;"	e	enum:PTxn
+PTC27_IN	.\gpio_cfg.h	455;"	d
+PTC27_OUT	.\gpio_cfg.h	112;"	d
+PTC28	.\gpio_cfg.h	/^    PTC28,$/;"	e	enum:PTxn
+PTC28_IN	.\gpio_cfg.h	456;"	d
+PTC28_OUT	.\gpio_cfg.h	113;"	d
+PTC29	.\gpio_cfg.h	/^    PTC29,$/;"	e	enum:PTxn
+PTC29_IN	.\gpio_cfg.h	457;"	d
+PTC29_OUT	.\gpio_cfg.h	114;"	d
+PTC2_IN	.\gpio_cfg.h	430;"	d
+PTC2_OUT	.\gpio_cfg.h	87;"	d
+PTC3	.\gpio_cfg.h	/^    PTC3,$/;"	e	enum:PTxn
+PTC30	.\gpio_cfg.h	/^    PTC30,$/;"	e	enum:PTxn
+PTC30_IN	.\gpio_cfg.h	458;"	d
+PTC30_OUT	.\gpio_cfg.h	115;"	d
+PTC31	.\gpio_cfg.h	/^    PTC31,$/;"	e	enum:PTxn
+PTC31_IN	.\gpio_cfg.h	459;"	d
+PTC31_OUT	.\gpio_cfg.h	116;"	d
+PTC3_IN	.\gpio_cfg.h	431;"	d
+PTC3_OUT	.\gpio_cfg.h	88;"	d
+PTC4	.\gpio_cfg.h	/^    PTC4,$/;"	e	enum:PTxn
+PTC4_IN	.\gpio_cfg.h	432;"	d
+PTC4_OUT	.\gpio_cfg.h	89;"	d
+PTC5	.\gpio_cfg.h	/^    PTC5,$/;"	e	enum:PTxn
+PTC5_IN	.\gpio_cfg.h	433;"	d
+PTC5_OUT	.\gpio_cfg.h	90;"	d
+PTC6	.\gpio_cfg.h	/^    PTC6,$/;"	e	enum:PTxn
+PTC6_IN	.\gpio_cfg.h	434;"	d
+PTC6_OUT	.\gpio_cfg.h	91;"	d
+PTC7	.\gpio_cfg.h	/^    PTC7,$/;"	e	enum:PTxn
+PTC7_IN	.\gpio_cfg.h	435;"	d
+PTC7_OUT	.\gpio_cfg.h	92;"	d
+PTC8	.\gpio_cfg.h	/^    PTC8,$/;"	e	enum:PTxn
+PTC8_IN	.\gpio_cfg.h	436;"	d
+PTC8_OUT	.\gpio_cfg.h	93;"	d
+PTC9	.\gpio_cfg.h	/^    PTC9,$/;"	e	enum:PTxn
+PTC9_IN	.\gpio_cfg.h	437;"	d
+PTC9_OUT	.\gpio_cfg.h	94;"	d
+PTC_BYTE0_IN	.\gpio_cfg.h	607;"	d
+PTC_BYTE0_OUT	.\gpio_cfg.h	545;"	d
+PTC_BYTE1_IN	.\gpio_cfg.h	608;"	d
+PTC_BYTE1_OUT	.\gpio_cfg.h	546;"	d
+PTC_BYTE2_IN	.\gpio_cfg.h	609;"	d
+PTC_BYTE2_OUT	.\gpio_cfg.h	547;"	d
+PTC_BYTE3_IN	.\gpio_cfg.h	610;"	d
+PTC_BYTE3_OUT	.\gpio_cfg.h	548;"	d
+PTC_WORD0_IN	.\gpio_cfg.h	684;"	d
+PTC_WORD0_OUT	.\gpio_cfg.h	635;"	d
+PTC_WORD1_IN	.\gpio_cfg.h	685;"	d
+PTC_WORD1_OUT	.\gpio_cfg.h	636;"	d
+PTD0	.\gpio_cfg.h	/^    PTD0,$/;"	e	enum:PTxn
+PTD0_IN	.\gpio_cfg.h	462;"	d
+PTD0_OUT	.\gpio_cfg.h	119;"	d
+PTD1	.\gpio_cfg.h	/^    PTD1,$/;"	e	enum:PTxn
+PTD10	.\gpio_cfg.h	/^    PTD10,$/;"	e	enum:PTxn
+PTD10_IN	.\gpio_cfg.h	472;"	d
+PTD10_OUT	.\gpio_cfg.h	129;"	d
+PTD11	.\gpio_cfg.h	/^    PTD11,$/;"	e	enum:PTxn
+PTD11_IN	.\gpio_cfg.h	473;"	d
+PTD11_OUT	.\gpio_cfg.h	130;"	d
+PTD12	.\gpio_cfg.h	/^    PTD12,$/;"	e	enum:PTxn
+PTD12_IN	.\gpio_cfg.h	474;"	d
+PTD12_OUT	.\gpio_cfg.h	131;"	d
+PTD13	.\gpio_cfg.h	/^    PTD13,$/;"	e	enum:PTxn
+PTD13_IN	.\gpio_cfg.h	475;"	d
+PTD13_OUT	.\gpio_cfg.h	132;"	d
+PTD14	.\gpio_cfg.h	/^    PTD14,$/;"	e	enum:PTxn
+PTD14_IN	.\gpio_cfg.h	476;"	d
+PTD14_OUT	.\gpio_cfg.h	133;"	d
+PTD15	.\gpio_cfg.h	/^    PTD15,$/;"	e	enum:PTxn
+PTD15_IN	.\gpio_cfg.h	477;"	d
+PTD15_OUT	.\gpio_cfg.h	134;"	d
+PTD16	.\gpio_cfg.h	/^    PTD16,$/;"	e	enum:PTxn
+PTD16_IN	.\gpio_cfg.h	478;"	d
+PTD16_OUT	.\gpio_cfg.h	135;"	d
+PTD17	.\gpio_cfg.h	/^    PTD17,$/;"	e	enum:PTxn
+PTD17_IN	.\gpio_cfg.h	479;"	d
+PTD17_OUT	.\gpio_cfg.h	136;"	d
+PTD18	.\gpio_cfg.h	/^    PTD18,$/;"	e	enum:PTxn
+PTD18_IN	.\gpio_cfg.h	480;"	d
+PTD18_OUT	.\gpio_cfg.h	137;"	d
+PTD19	.\gpio_cfg.h	/^    PTD19,$/;"	e	enum:PTxn
+PTD19_IN	.\gpio_cfg.h	481;"	d
+PTD19_OUT	.\gpio_cfg.h	138;"	d
+PTD1_IN	.\gpio_cfg.h	463;"	d
+PTD1_OUT	.\gpio_cfg.h	120;"	d
+PTD2	.\gpio_cfg.h	/^    PTD2,$/;"	e	enum:PTxn
+PTD20	.\gpio_cfg.h	/^    PTD20,$/;"	e	enum:PTxn
+PTD20_IN	.\gpio_cfg.h	482;"	d
+PTD20_OUT	.\gpio_cfg.h	139;"	d
+PTD21	.\gpio_cfg.h	/^    PTD21,$/;"	e	enum:PTxn
+PTD21_IN	.\gpio_cfg.h	483;"	d
+PTD21_OUT	.\gpio_cfg.h	140;"	d
+PTD22	.\gpio_cfg.h	/^    PTD22,$/;"	e	enum:PTxn
+PTD22_IN	.\gpio_cfg.h	484;"	d
+PTD22_OUT	.\gpio_cfg.h	141;"	d
+PTD23	.\gpio_cfg.h	/^    PTD23,$/;"	e	enum:PTxn
+PTD23_IN	.\gpio_cfg.h	485;"	d
+PTD23_OUT	.\gpio_cfg.h	142;"	d
+PTD24	.\gpio_cfg.h	/^    PTD24,$/;"	e	enum:PTxn
+PTD24_IN	.\gpio_cfg.h	486;"	d
+PTD24_OUT	.\gpio_cfg.h	143;"	d
+PTD25	.\gpio_cfg.h	/^    PTD25,$/;"	e	enum:PTxn
+PTD25_IN	.\gpio_cfg.h	487;"	d
+PTD25_OUT	.\gpio_cfg.h	144;"	d
+PTD26	.\gpio_cfg.h	/^    PTD26,$/;"	e	enum:PTxn
+PTD26_IN	.\gpio_cfg.h	488;"	d
+PTD26_OUT	.\gpio_cfg.h	145;"	d
+PTD27	.\gpio_cfg.h	/^    PTD27,$/;"	e	enum:PTxn
+PTD27_IN	.\gpio_cfg.h	489;"	d
+PTD27_OUT	.\gpio_cfg.h	146;"	d
+PTD28	.\gpio_cfg.h	/^    PTD28,$/;"	e	enum:PTxn
+PTD28_IN	.\gpio_cfg.h	490;"	d
+PTD28_OUT	.\gpio_cfg.h	147;"	d
+PTD29	.\gpio_cfg.h	/^    PTD29,$/;"	e	enum:PTxn
+PTD29_IN	.\gpio_cfg.h	491;"	d
+PTD29_OUT	.\gpio_cfg.h	148;"	d
+PTD2_IN	.\gpio_cfg.h	464;"	d
+PTD2_OUT	.\gpio_cfg.h	121;"	d
+PTD3	.\gpio_cfg.h	/^    PTD3,$/;"	e	enum:PTxn
+PTD30	.\gpio_cfg.h	/^    PTD30,$/;"	e	enum:PTxn
+PTD30_IN	.\gpio_cfg.h	492;"	d
+PTD30_OUT	.\gpio_cfg.h	149;"	d
+PTD31	.\gpio_cfg.h	/^    PTD31,$/;"	e	enum:PTxn
+PTD31_IN	.\gpio_cfg.h	493;"	d
+PTD31_OUT	.\gpio_cfg.h	150;"	d
+PTD3_IN	.\gpio_cfg.h	465;"	d
+PTD3_OUT	.\gpio_cfg.h	122;"	d
+PTD4	.\gpio_cfg.h	/^    PTD4,$/;"	e	enum:PTxn
+PTD4_IN	.\gpio_cfg.h	466;"	d
+PTD4_OUT	.\gpio_cfg.h	123;"	d
+PTD5	.\gpio_cfg.h	/^    PTD5,$/;"	e	enum:PTxn
+PTD5_IN	.\gpio_cfg.h	467;"	d
+PTD5_OUT	.\gpio_cfg.h	124;"	d
+PTD6	.\gpio_cfg.h	/^    PTD6,$/;"	e	enum:PTxn
+PTD6_IN	.\gpio_cfg.h	468;"	d
+PTD6_OUT	.\gpio_cfg.h	125;"	d
+PTD7	.\gpio_cfg.h	/^    PTD7,$/;"	e	enum:PTxn
+PTD7_IN	.\gpio_cfg.h	469;"	d
+PTD7_OUT	.\gpio_cfg.h	126;"	d
+PTD8	.\gpio_cfg.h	/^    PTD8,$/;"	e	enum:PTxn
+PTD8_IN	.\gpio_cfg.h	470;"	d
+PTD8_OUT	.\gpio_cfg.h	127;"	d
+PTD9	.\gpio_cfg.h	/^    PTD9,$/;"	e	enum:PTxn
+PTD9_IN	.\gpio_cfg.h	471;"	d
+PTD9_OUT	.\gpio_cfg.h	128;"	d
+PTD_BYTE0_IN	.\gpio_cfg.h	614;"	d
+PTD_BYTE0_OUT	.\gpio_cfg.h	551;"	d
+PTD_BYTE1_IN	.\gpio_cfg.h	615;"	d
+PTD_BYTE1_OUT	.\gpio_cfg.h	552;"	d
+PTD_BYTE2_IN	.\gpio_cfg.h	616;"	d
+PTD_BYTE2_OUT	.\gpio_cfg.h	553;"	d
+PTD_BYTE3_IN	.\gpio_cfg.h	617;"	d
+PTD_BYTE3_OUT	.\gpio_cfg.h	554;"	d
+PTD_WORD0_IN	.\gpio_cfg.h	689;"	d
+PTD_WORD0_OUT	.\gpio_cfg.h	640;"	d
+PTD_WORD1_IN	.\gpio_cfg.h	690;"	d
+PTD_WORD1_OUT	.\gpio_cfg.h	641;"	d
+PTE0	.\gpio_cfg.h	/^    PTE0,$/;"	e	enum:PTxn
+PTE0_IN	.\gpio_cfg.h	496;"	d
+PTE0_OUT	.\gpio_cfg.h	153;"	d
+PTE1	.\gpio_cfg.h	/^    PTE1,$/;"	e	enum:PTxn
+PTE10	.\gpio_cfg.h	/^    PTE10,$/;"	e	enum:PTxn
+PTE10_IN	.\gpio_cfg.h	506;"	d
+PTE10_OUT	.\gpio_cfg.h	163;"	d
+PTE11	.\gpio_cfg.h	/^    PTE11,$/;"	e	enum:PTxn
+PTE11_IN	.\gpio_cfg.h	507;"	d
+PTE11_OUT	.\gpio_cfg.h	164;"	d
+PTE12	.\gpio_cfg.h	/^    PTE12,$/;"	e	enum:PTxn
+PTE12_IN	.\gpio_cfg.h	508;"	d
+PTE12_OUT	.\gpio_cfg.h	165;"	d
+PTE13	.\gpio_cfg.h	/^    PTE13,$/;"	e	enum:PTxn
+PTE13_IN	.\gpio_cfg.h	509;"	d
+PTE13_OUT	.\gpio_cfg.h	166;"	d
+PTE14	.\gpio_cfg.h	/^    PTE14,$/;"	e	enum:PTxn
+PTE14_IN	.\gpio_cfg.h	510;"	d
+PTE14_OUT	.\gpio_cfg.h	167;"	d
+PTE15	.\gpio_cfg.h	/^    PTE15,$/;"	e	enum:PTxn
+PTE15_IN	.\gpio_cfg.h	511;"	d
+PTE15_OUT	.\gpio_cfg.h	168;"	d
+PTE16	.\gpio_cfg.h	/^    PTE16,$/;"	e	enum:PTxn
+PTE16_IN	.\gpio_cfg.h	512;"	d
+PTE16_OUT	.\gpio_cfg.h	169;"	d
+PTE17	.\gpio_cfg.h	/^    PTE17,$/;"	e	enum:PTxn
+PTE17_IN	.\gpio_cfg.h	513;"	d
+PTE17_OUT	.\gpio_cfg.h	170;"	d
+PTE18	.\gpio_cfg.h	/^    PTE18,$/;"	e	enum:PTxn
+PTE18_IN	.\gpio_cfg.h	514;"	d
+PTE18_OUT	.\gpio_cfg.h	171;"	d
+PTE19	.\gpio_cfg.h	/^    PTE19,$/;"	e	enum:PTxn
+PTE19_IN	.\gpio_cfg.h	515;"	d
+PTE19_OUT	.\gpio_cfg.h	172;"	d
+PTE1_IN	.\gpio_cfg.h	497;"	d
+PTE1_OUT	.\gpio_cfg.h	154;"	d
+PTE2	.\gpio_cfg.h	/^    PTE2,$/;"	e	enum:PTxn
+PTE20	.\gpio_cfg.h	/^    PTE20,$/;"	e	enum:PTxn
+PTE20_IN	.\gpio_cfg.h	516;"	d
+PTE20_OUT	.\gpio_cfg.h	173;"	d
+PTE21	.\gpio_cfg.h	/^    PTE21,$/;"	e	enum:PTxn
+PTE21_IN	.\gpio_cfg.h	517;"	d
+PTE21_OUT	.\gpio_cfg.h	174;"	d
+PTE22	.\gpio_cfg.h	/^    PTE22,$/;"	e	enum:PTxn
+PTE22_IN	.\gpio_cfg.h	518;"	d
+PTE22_OUT	.\gpio_cfg.h	175;"	d
+PTE23	.\gpio_cfg.h	/^    PTE23,$/;"	e	enum:PTxn
+PTE23_IN	.\gpio_cfg.h	519;"	d
+PTE23_OUT	.\gpio_cfg.h	176;"	d
+PTE24	.\gpio_cfg.h	/^    PTE24,$/;"	e	enum:PTxn
+PTE24_IN	.\gpio_cfg.h	520;"	d
+PTE24_OUT	.\gpio_cfg.h	177;"	d
+PTE25	.\gpio_cfg.h	/^    PTE25,$/;"	e	enum:PTxn
+PTE25_IN	.\gpio_cfg.h	521;"	d
+PTE25_OUT	.\gpio_cfg.h	178;"	d
+PTE26	.\gpio_cfg.h	/^    PTE26,$/;"	e	enum:PTxn
+PTE26_IN	.\gpio_cfg.h	522;"	d
+PTE26_OUT	.\gpio_cfg.h	179;"	d
+PTE27	.\gpio_cfg.h	/^    PTE27,$/;"	e	enum:PTxn
+PTE27_IN	.\gpio_cfg.h	523;"	d
+PTE27_OUT	.\gpio_cfg.h	180;"	d
+PTE28	.\gpio_cfg.h	/^    PTE28,$/;"	e	enum:PTxn
+PTE28_IN	.\gpio_cfg.h	524;"	d
+PTE28_OUT	.\gpio_cfg.h	181;"	d
+PTE29	.\gpio_cfg.h	/^    PTE29,$/;"	e	enum:PTxn
+PTE29_IN	.\gpio_cfg.h	525;"	d
+PTE29_OUT	.\gpio_cfg.h	182;"	d
+PTE2_IN	.\gpio_cfg.h	498;"	d
+PTE2_OUT	.\gpio_cfg.h	155;"	d
+PTE3	.\gpio_cfg.h	/^    PTE3,$/;"	e	enum:PTxn
+PTE30	.\gpio_cfg.h	/^    PTE30,$/;"	e	enum:PTxn
+PTE30_IN	.\gpio_cfg.h	526;"	d
+PTE30_OUT	.\gpio_cfg.h	183;"	d
+PTE31	.\gpio_cfg.h	/^    PTE31,$/;"	e	enum:PTxn
+PTE31_IN	.\gpio_cfg.h	527;"	d
+PTE31_OUT	.\gpio_cfg.h	184;"	d
+PTE3_IN	.\gpio_cfg.h	499;"	d
+PTE3_OUT	.\gpio_cfg.h	156;"	d
+PTE4	.\gpio_cfg.h	/^    PTE4,$/;"	e	enum:PTxn
+PTE4_IN	.\gpio_cfg.h	500;"	d
+PTE4_OUT	.\gpio_cfg.h	157;"	d
+PTE5	.\gpio_cfg.h	/^    PTE5,$/;"	e	enum:PTxn
+PTE5_IN	.\gpio_cfg.h	501;"	d
+PTE5_OUT	.\gpio_cfg.h	158;"	d
+PTE6	.\gpio_cfg.h	/^    PTE6,$/;"	e	enum:PTxn
+PTE6_IN	.\gpio_cfg.h	502;"	d
+PTE6_OUT	.\gpio_cfg.h	159;"	d
+PTE7	.\gpio_cfg.h	/^    PTE7,$/;"	e	enum:PTxn
+PTE7_IN	.\gpio_cfg.h	503;"	d
+PTE7_OUT	.\gpio_cfg.h	160;"	d
+PTE8	.\gpio_cfg.h	/^    PTE8,$/;"	e	enum:PTxn
+PTE8_IN	.\gpio_cfg.h	504;"	d
+PTE8_OUT	.\gpio_cfg.h	161;"	d
+PTE9	.\gpio_cfg.h	/^    PTE9,$/;"	e	enum:PTxn
+PTE9_IN	.\gpio_cfg.h	505;"	d
+PTE9_OUT	.\gpio_cfg.h	162;"	d
+PTE_BYTE0_IN	.\gpio_cfg.h	620;"	d
+PTE_BYTE0_OUT	.\gpio_cfg.h	557;"	d
+PTE_BYTE1_IN	.\gpio_cfg.h	621;"	d
+PTE_BYTE1_OUT	.\gpio_cfg.h	558;"	d
+PTE_BYTE2_IN	.\gpio_cfg.h	622;"	d
+PTE_BYTE2_OUT	.\gpio_cfg.h	559;"	d
+PTE_BYTE3_IN	.\gpio_cfg.h	623;"	d
+PTE_BYTE3_OUT	.\gpio_cfg.h	560;"	d
+PTE_WORD0_IN	.\gpio_cfg.h	694;"	d
+PTE_WORD0_OUT	.\gpio_cfg.h	645;"	d
+PTE_WORD1_IN	.\gpio_cfg.h	695;"	d
+PTE_WORD1_OUT	.\gpio_cfg.h	646;"	d
+PTxn	.\gpio_cfg.h	/^typedef enum PTxn$/;"	g
+PTxn	.\gpio_cfg.h	/^} PTxn;$/;"	t	typeref:enum:PTxn
+__GPIO_CFG_H__	.\gpio_cfg.h	11;"	d
+__GPIO_H__	.\gpio.h	11;"	d
+gpio_get	.\gpio.c	/^u8 gpio_get(PORTx portx, u8 n)          \/\/ËØªÂèñÂºïËÑöÁä∂ÊÄÅ$/;"	f	signature:(PORTx portx, u8 n)
+gpio_get	.\gpio.h	/^u8      gpio_get   (PORTx,  u8 n);                                                              \/\/∂¡»°“˝Ω≈◊¥Ã¨$/;"	p	signature:(PORTx, u8 n)
+gpio_init	.\gpio.c	/^void gpio_init (PORTx portx, u8 n, GPIO_CFG cfg, u8 data)$/;"	f	signature:(PORTx portx, u8 n, GPIO_CFG cfg, u8 data)
+gpio_init	.\gpio.h	/^void    gpio_init  (PORTx, u8 n, GPIO_CFG, u8 data);                                            \/\/≥ı ºªØgpio$/;"	p	signature:(PORTx, u8 n, GPIO_CFG, u8 data)
+gpio_set	.\gpio.c	/^void gpio_set (PORTx portx, u8 n, u8 data)$/;"	f	signature:(PORTx portx, u8 n, u8 data)
+gpio_set	.\gpio.h	/^void    gpio_set   (PORTx,  u8 n,     u8 data);                                                 \/\/…Ë÷√“˝Ω≈◊¥Ã¨$/;"	p	signature:(PORTx, u8 n, u8 data)
+gpio_turn	.\gpio.c	/^void gpio_turn (PORTx portx, u8 n)$/;"	f	signature:(PORTx portx, u8 n)
