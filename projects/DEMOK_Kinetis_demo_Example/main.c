@@ -92,6 +92,7 @@ void run();
 void CountThreshole(void);
 void datatrans();
 //-----------------主函数--------------------
+// sample
 int main()
 {
     u8 sccb_ack;
