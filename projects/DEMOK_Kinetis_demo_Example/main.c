@@ -81,6 +81,9 @@ extern u8 TIME1flag_100ms, flag_1ms;
 
 volatile u32 rowCnt = 0; //行计数
 
+u8 encoder_dir;        //编码器方向
+u8 encoder_select = 1; //选择编码器
+
 //-----------------函数声明------------------
 void ImageProc();
 void GPIO_Init();
@@ -100,23 +103,24 @@ void main()
     dianjispeed = 1400;
     DuoDir = 0;   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1; //0 舵机调模式  >0 正常工作模式
-    ensend = 1;
+    ensend = 0;
     servPram = servPram1;
     dPram = dPram1;
     row_mid = 150;
     DisableInterrupts; //关闭中断开始初始化数据
 
     FTM1_QUAD_Iint(); //正交解码测速  A相---PTA8  B相---PTA9
-    FTM2_QUAD_Iint(); //正交解码测速  A相---PTA10 B相---PTA11
+    //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
 
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
     sccb_init(); //-----SCCB初始化，用于配置摄像头状态
     sccb_ack = sccb_refresh();
     PWM_Init(); //-----PWM初始化，用于初始化舵机电机的输出
 
-    EXTI_Init(); //-----外部中断初始化，用于摄像头中断触发
-    UART_Init(); //-----UART初始化，用于初始化串口
-    //pit_init_ms(PIT0, 1);  //初始化PIT0，定时时间为： 1ms
+    EXTI_Init();           //-----外部中断初始化，用于摄像头中断触发
+    UART_Init();           //-----UART初始化，用于初始化串口
+    pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
+    //TODO:添加监视test_time
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
     oled_init();  //oled初始化
     Image_Init(); //----图像数组初始化
@@ -158,14 +162,17 @@ void main()
 
 void GPIO_Init()
 {
-    gpio_init(PORTA, 17, GPO, 1); //初始化PTE0为高电平输出---LED0
-    gpio_set(PORTA, 17, 1);       //设置PTE0为高电平输出，LED0灭
-                                  //如果之后初始化成功，会点亮灯。
+    gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTB, 17, GPO, encoder_select); //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTA, 17, GPO, 1);       //初始化PTE0为高电平输出---LED0
+    gpio_set(PORTA, 17, 1);             //设置PTE0为高电平输出，LED0灭
+                                        //如果之后初始化成功，会点亮灯。
 }
 
 void PWM_Init()
 {
-    /* FTM_PWM_init(FTM1, CH0, 50, DuoCenter);      //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM1_CH0对应PTA8口 */
+    FTM_PWM_init(FTM2, CH1, 50, DuoCenter); //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM2_CH1对应PTB19口
+    // 要改变占空比，用FTM_PWM_Duty
     FTM_PWM_init(FTM0, CH0, 10000, dianjispeed); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC1口
 }
 
@@ -282,16 +289,25 @@ void ImageProc()
 void run()
 {
     TimeCount++;
-    if (TimeCount >= 5) //5ms读一次速度值
+    //uart_putchar(UART4, 0X55);
+    //uart_putchar(UART4, TimeCount >> 4);
+    //uart_putchar(UART4, TimeCount | 0xFF);
+    if (TimeCount >= 2) //20ms读一次速度值
     {
         TimeCount = 0;
-        g_nRightMotorPulse = FTM2_CNT; //可直接读取正负值，变量类型要为s16类型！！！
-        FTM2_CNT = 0;
-        g_nRightMotorPulseSigma += g_nRightMotorPulse;
-
-        g_nLeftMotorPulse = FTM1_CNT;
+        encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
+        encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反
         FTM1_CNT = 0;
-        g_nLeftMotorPulseSigma += g_nLeftMotorPulse;
+        if (encoder_select){
+            g_nLeftMotorPulse = FTM1_CNT;
+            g_nLeftMotorPulseSigma += encoder_dir ? g_nLeftMotorPulse : -g_nLeftMotorPulse;
+        } else {
+            g_nRightMotorPulse = FTM1_CNT;
+            g_nRightMotorPulseSigma += encoder_dir ? g_nLeftMotorPulse : -g_nLeftMotorPulse;
+        }
+
+        encoder_select = !encoder_select;   //编码器选通位取反
+        gpio_set(PORTB, 17, encoder_select);    //编码器选通位电平输出,切换到另一侧编码器
     }
 }
 

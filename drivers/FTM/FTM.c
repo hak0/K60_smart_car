@@ -695,15 +695,17 @@ void FTM_Input_init(FTMn ftmn, CHn ch, Input_cfg cfg)
 //*****************************************************************************
 void FTM1_QUAD_Iint(void)
 {
-    PORTA_PCR12= PORT_PCR_MUX(6); // 设置引脚A12引脚为FTM1_PHA功能  
-    PORTA_PCR13= PORT_PCR_MUX(6); // 设置引脚A13引脚为FTM1_PHB功能  
+    PORTA_PCR12= PORT_PCR_MUX(7); // 设置引脚A12引脚为FTM1_PHA功能  
+    PORTA_PCR13= PORT_PCR_MUX(7); // 设置引脚A13引脚为FTM1_PHB功能  
     PORT_PCR_REG(PORTA_BASE_PTR, 12) |= PORT_PCR_PE_MASK | PORT_PCR_PS_MASK ;      //开弱上拉
     PORT_PCR_REG(PORTA_BASE_PTR, 13) |= PORT_PCR_PE_MASK | PORT_PCR_PS_MASK ;      //开弱上拉
  
     SIM_SCGC6|=SIM_SCGC6_FTM1_MASK;//使能FTM1时钟  
     FTM1_MODE |= FTM_MODE_WPDIS_MASK;//写保护禁止  
-    FTM1_QDCTRL   &=  FTM_QDCTRL_QUADMODE_MASK; 
+    FTM1_QDCTRL  |= FTM_QDCTRL_QUADMODE_MASK; 
     // PhaseA计数， PhaseB记录方向
+    FTM1_QDCTRL |= FTM_QDCTRL_PHAPOL_MASK;
+    FTM1_QDCTRL |= FTM_QDCTRL_PHBPOL_MASK;
     FTM1_CNTIN=0;//FTM0计数器初始值为0  
     FTM1_MOD=65535;//结束值  
     FTM1_QDCTRL|=FTM_QDCTRL_QUADEN_MASK;//启用FTM1正交解码模式  

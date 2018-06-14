@@ -4,33 +4,31 @@
 ///           2015-4-10               ///
 //////////////////////////////////////////
 
-
 #include "common.h"
 #include "include.h"
 
 char data_receive[25];
-int num222=0;
-unsigned char Is_SendPhoto=0;
-unsigned char V_Cnt=0; 
+int num222 = 0;
+unsigned char Is_SendPhoto = 0;
+unsigned char V_Cnt = 0;
 extern unsigned short DuoCenter; ////舵机中间值 120HZ
 extern unsigned short dianjispeed;
-extern u8 ensend;  //允许发送
+extern u8 ensend; //允许发送
 
 extern u16 servPram;
 extern u16 dPram;
 extern u8 enpwm;
 extern u8 speedmodi;
 
-//extern void run();
+extern void run();
 
-extern u32 rowCnt ;   //行计数
+extern u32 rowCnt; //行计数
 extern u8 Buffer1[ROW][COL];
 u8 SampleFlag = 0;
 extern u8 VSYN_Flag;
 
-
-unsigned char flag_1ms=0; 
-u8 TIME1flag_100ms = 0 ;
+unsigned char flag_1ms = 0;
+u8 TIME1flag_100ms = 0;
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
 *
@@ -45,56 +43,63 @@ void USART0_IRQHandler(void)
     uint8 ch;
     //DisableInterrupts;		    //关总中断
     //接收一个字节数据并回发
-    ch = uart_getchar (UART0);      //接收到一个数据
-    data_receive[num222]=ch;
+    ch = uart_getchar(UART0); //接收到一个数据
+    data_receive[num222] = ch;
     num222++;
-    if(data_receive[0]=='#')  //标识头
-    {   
-      if(ch=='$')
-      {  if(data_receive[1]=='D')  //舵机中值
-         { DuoCenter=(data_receive[2]-48)*1000+(data_receive[3]-48)*100+(data_receive[4]-48)*10+(data_receive[5]-48);
-           Dis_num(70,0,DuoCenter);
-           FTM_PWM_Duty(FTM1, CH0, DuoCenter); 
-         }
-         if(data_receive[1]=='S')  //速度参数
-         {  dianjispeed = (data_receive[2]-48)*1000+(data_receive[3]-48)*100+(data_receive[4]-48)*10+(data_receive[5]-48);
-            Dis_num(70,0,dianjispeed);
-            speedmodi=1;
-         }
-         if(data_receive[1]=='Y')  // 允许摄像头上传
-         {  ensend = 1;
-         }
-         if(data_receive[1]=='N')  // 禁止摄像头上传
-         {  ensend = 0;
-         }
-         if(data_receive[1]=='X')  // 允许PWM值上传
-         {  enpwm = 1;
-         }
-         if(data_receive[1]=='Z')  // 禁止PWM值上传
-         {  enpwm = 0;
-         }         
-         if(data_receive[1]=='P')  //舵机比例系数
-         {  servPram = (data_receive[2]-48)*100+(data_receive[3]-48)*10+(data_receive[4]-48);
-            Dis_num(70,2,servPram);
-         } 
-         if(data_receive[1]=='F')  //舵机微分系数
-         {  dPram = (data_receive[2]-48)*100+(data_receive[3]-48)*10+(data_receive[4]-48);
-            Dis_num(70,3,dPram);
-         }
-         for(num222=0;num222<10;num222++)
-           data_receive[num222]=0x00;
-         num222=0;
-       }
-       if(num222>12)
-         num222=0;
+    if (data_receive[0] == '#') //标识头
+    {
+        if (ch == '$') {
+            if (data_receive[1] == 'D') //舵机中值
+            {
+                DuoCenter = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
+                Dis_num(70, 0, DuoCenter);
+                FTM_PWM_Duty(FTM1, CH0, DuoCenter);
+            }
+            if (data_receive[1] == 'S') //速度参数
+            {
+                dianjispeed = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
+                Dis_num(70, 0, dianjispeed);
+                speedmodi = 1;
+            }
+            if (data_receive[1] == 'Y') // 允许摄像头上传
+            {
+                ensend = 1;
+            }
+            if (data_receive[1] == 'N') // 禁止摄像头上传
+            {
+                ensend = 0;
+            }
+            if (data_receive[1] == 'X') // 允许PWM值上传
+            {
+                enpwm = 1;
+            }
+            if (data_receive[1] == 'Z') // 禁止PWM值上传
+            {
+                enpwm = 0;
+            }
+            if (data_receive[1] == 'P') //舵机比例系数
+            {
+                servPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
+                Dis_num(70, 2, servPram);
+            }
+            if (data_receive[1] == 'F') //舵机微分系数
+            {
+                dPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
+                Dis_num(70, 3, dPram);
+            }
+            for (num222 = 0; num222 < 10; num222++)
+                data_receive[num222] = 0x00;
+            num222 = 0;
+        }
+        if (num222 > 12)
+            num222 = 0;
+    } else {
+        for (num222 = 0; num222 < 10; num222++)
+            data_receive[num222] = 0x00;
+        num222 = 0;
     }
-    else
-    {  for(num222=0;num222<10;num222++)
-         data_receive[num222]=0x00;
-       num222=0;
-    }   
     //EnableInterrupts;		    //开总中断
-    //uart_putchar(UART0,'A'); 
+    //uart_putchar(UART0,'A');
 }
 
 /*************************************************************************
@@ -109,20 +114,17 @@ void USART0_IRQHandler(void)
 #if 1
 void PIT0_IRQHandler(void) //1ms
 {
-   // LED_turn(LED1);             //LED1反转
-    PIT_Flag_Clear(PIT0);       //清中断标志位
-    flag_1ms=1;  //1ms中断标志
-    //run();   //测速函数
+    // LED_turn(LED1);             //LED1反转
+    PIT_Flag_Clear(PIT0); //清中断标志位
+    flag_1ms = 1;         //1ms中断标志
+    run();                //测速函数
 }
 #else
-extern u32 test_time;
 void PIT0_IRQHandler(void)
 {
-    test_time++;
-    PIT_Flag_Clear(PIT0);       //清中断标志位
+    PIT_Flag_Clear(PIT0); //清中断标志位
 }
 #endif
-
 
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
@@ -140,7 +142,6 @@ void SysTick_Handler(void)
     //    OSIntExit();
 }
 
-
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
 *
@@ -152,8 +153,7 @@ void SysTick_Handler(void)
 *************************************************************************/
 void HardFault_Handler(void)
 {
-    while (1)
-    {
+    while (1) {
         printf("\n****硬件上访错误!!!*****\r\n\n");
     }
 }
@@ -171,8 +171,6 @@ void PendSV_Handler(void)
 {
 }
 
-
-
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
 *
@@ -184,48 +182,43 @@ void PendSV_Handler(void)
 *
 *************************************************************************/
 
-
-void PORTE_IRQHandler()  
+void PORTE_IRQHandler()
 {
-    unsigned int lie; 
-    
+    unsigned int lie;
     //---VSYN场中断处理
-    if(PORTE_ISFR & (1 << 1))         //PTE1触发中断  场中断
-    { 
-        PORTE_ISFR  |= (1 << 1);       //写1清中断标志位
+    if (PORTE_ISFR & (1 << 1)) //PTE1触发中断  场中断
+    {
+        PORTE_ISFR |= (1 << 1); //写1清中断标志位
         rowCnt = 0;
         SampleFlag = 1;
-    }  
-    
-   //---HREF行中断处理
-    if( PORTE_ISFR & (1 << 0))         //PTE0触发中断  
+    }
+    //---HREF行中断处理
+    if (PORTE_ISFR & (1 << 0)) //PTE0触发中断
     {
-        PORTE_ISFR  |= (1 << 0);        //写1清中断标志位
-        if ( SampleFlag == 0 )         //不足一场时返回
-        { 
-          return;
+        PORTE_ISFR |= (1 << 0); //写1清中断标志位
+        if (SampleFlag == 0)    //不足一场时返回
+        {
+            return;
         }
-        //-------------DMA初始化通道4，数据源为PTD，每次存在数组ImageBuf[]指针中，PCLK接PTA19触发，每次传输1个字节，每次触发传输300次，上升沿触发     
-        else
-        { 
-          if(rowCnt>10)
-          {  
-            for(lie=0;lie<70;lie++)   //130  延时修改，可以调节图像的左右
-            {
-            asm("nop");
-            asm("nop");
+        //-------------DMA初始化通道4，数据源为PTD，每次存在数组ImageBuf[]指针中，PCLK接PTA19触发，每次传输1个字节，每次触发传输300次，上升沿触发
+        else {
+            if (rowCnt > 10) {
+                for (lie = 0; lie < 70; lie++) //130  延时修改，可以调节图像的左右
+                {
+                    asm("nop");
+                    asm("nop");
+                }
+                DMA_PORTx2BUFF_Init(DMA_CH4, (void*)&PTD_BYTE0_IN, Buffer1[rowCnt - 11], PTA19, DMA_BYTE1, COL, DMA_rising_down);
+                DMA_EN(DMA_CH4);
             }
-            DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTD_BYTE0_IN, Buffer1[rowCnt-11], PTA19, DMA_BYTE1, COL, DMA_rising_down);
-            DMA_EN(DMA_CH4); 
-          }
-          rowCnt++;
-          if(rowCnt > ROW+11)
-          { DisableInterrupts;
-            rowCnt = 0;
-            DMA_DIS(DMA_CH4);
-            VSYN_Flag = 1;
-            SampleFlag=0;
-          }
+            rowCnt++;
+            if (rowCnt > ROW + 11) {
+                DisableInterrupts;
+                rowCnt = 0;
+                DMA_DIS(DMA_CH4);
+                VSYN_Flag = 1;
+                SampleFlag = 0;
+            }
         }
     }
 }
@@ -241,8 +234,8 @@ void PORTE_IRQHandler()
 *************************************************************************/
 void DMA_CH4_Handler(void)
 {
-    DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
-    DMA_IRQ_DIS(DMA_CH4);                               //禁止DMA   等待下一次行中断来临开启DMA
+    DMA_IRQ_CLEAN(DMA_CH4); //清除通道传输中断标志位    (这样才能再次进入中断)
+    DMA_IRQ_DIS(DMA_CH4);   //禁止DMA   等待下一次行中断来临开启DMA
 }
 
 /*************************************************************************
@@ -257,8 +250,6 @@ void DMA_CH4_Handler(void)
 *************************************************************************/
 void FTM0_IRQHandler()
 {
-
-
 }
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
@@ -272,8 +263,6 @@ void FTM0_IRQHandler()
 *************************************************************************/
 void FTM2_IRQHandler()
 {
-
-
 }
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
@@ -287,13 +276,12 @@ void FTM2_IRQHandler()
 *************************************************************************/
 void FTM1_IRQHandler()
 {
-    u8 s = FTM1_STATUS;             //读取捕捉和比较状态  All CHnF bits can be checked using only one read of STATUS.
+    u8 s = FTM1_STATUS; //读取捕捉和比较状态  All CHnF bits can be checked using only one read of STATUS.
     u8 n;
-    FTM1_STATUS = 0x00;               //清中断标志位
+    FTM1_STATUS = 0x00; //清中断标志位
 
     n = 0;
-    if( s & (1 << n) )
-    {
+    if (s & (1 << n)) {
         FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
         /*     用户任务       */
         //LED_turn(LED1);                             //翻转LED1
@@ -308,15 +296,13 @@ void FTM1_IRQHandler()
     }
 
     n = 1;
-    if( s & (1 << n) )
-    {
+    if (s & (1 << n)) {
         FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
         /*     用户任务       */
-
 
         /*********************/
         //不建议在这里开启输入捕捉中断
         //FTM_CnSC_REG(FTM1_BASE_PTR,n) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
     }
-
 }
+
