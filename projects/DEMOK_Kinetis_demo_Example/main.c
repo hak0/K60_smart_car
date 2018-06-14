@@ -9,9 +9,9 @@
 #include "include.h"
 
 #define servMotorCenture 780 //880 //920 //960 //1710     //舵机中心位置
-#define servMotorLeft 635    //730 //770  //1580          
+#define servMotorLeft 635    //730 //770  //1580
 //舵机左极限，很关键，限幅防止舵机打死
-#define servMotorRight 925   //1030 //1070 //1050 //1840 
+#define servMotorRight 925 //1030 //1070 //1050 //1840
 //舵机右极限，很关键，限s幅防止舵机打死
 
 #define cmosrow 150
@@ -30,7 +30,7 @@ u16 dPram2 = 13;    //12;//12;        //小弯时  舵机转角积分系数  放
 u16 servPram3 = 19; //22;//22;     //大弯时 舵机转角比例系数 放大10倍
 u16 dPram3 = 10;    //12;//12;        //大弯时  舵机转角积分系数  放大100倍
 
-u8 Buffer1[ROW][COL] = { 0 }; //37*8=296    
+u8 Buffer1[ROW][COL] = { 0 }; //37*8=296
 /* 通过DMA采集(在isr.c中行中断中触发DMA采集)二维图像存储于Buffer1数组中，
  * ROW,COL在Include.h中定义 */
 
@@ -66,7 +66,7 @@ u16 light_y;
 s16 row_mid;    //中线值
 s16 row_midold; //前一次中线值
 //
-u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag, 
+u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,
     left_black, right_black, flag1 = 0;
 s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;
 u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;
@@ -74,7 +74,7 @@ u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;
 unsigned short DuoCenter; //舵机中间值 120HZ
 unsigned short dianjispeed;
 s32 TimeCount = 0; //1ms中断标志
-s16 g_nLeftMotorPulse, g_nRightMotorPulse, g_nLeftMotorPulseSigma, 
+s16 g_nLeftMotorPulse, g_nRightMotorPulse, g_nLeftMotorPulseSigma,
     g_nRightMotorPulseSigma;
 
 extern u8 TIME1flag_100ms, flag_1ms;
@@ -92,8 +92,7 @@ void run();
 void CountThreshole(void);
 void datatrans();
 //-----------------主函数--------------------
-// sample
-int main()
+void main()
 {
     u8 sccb_ack;
     u16 discnt;
@@ -107,8 +106,8 @@ int main()
     row_mid = 150;
     DisableInterrupts; //关闭中断开始初始化数据
 
-    //FTM1_QUAD_Iint();  //正交解码测速  A相---PTA8  B相---PTA9
-    //FTM2_QUAD_Iint();   //正交解码测速  A相---PTA10 B相---PTA11
+    FTM1_QUAD_Iint(); //正交解码测速  A相---PTA8  B相---PTA9
+    FTM2_QUAD_Iint(); //正交解码测速  A相---PTA10 B相---PTA11
 
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
     sccb_init(); //-----SCCB初始化，用于配置摄像头状态
@@ -117,7 +116,7 @@ int main()
 
     EXTI_Init(); //-----外部中断初始化，用于摄像头中断触发
     UART_Init(); //-----UART初始化，用于初始化串口
-    //pit_init_ms(PIT0, 100);  //初始化PIT0，定时时间为： 100ms
+    //pit_init_ms(PIT0, 1);  //初始化PIT0，定时时间为： 1ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
     oled_init();  //oled初始化
     Image_Init(); //----图像数组初始化
@@ -155,7 +154,6 @@ int main()
             EnableInterrupts;
         }
     }
-    return 0;
 }
 
 void GPIO_Init()
@@ -167,7 +165,7 @@ void GPIO_Init()
 
 void PWM_Init()
 {
-    FTM_PWM_init(FTM1, CH0, 50, DuoCenter);      //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM1_CH0对应PTA8口
+    /* FTM_PWM_init(FTM1, CH0, 50, DuoCenter);      //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM1_CH0对应PTA8口 */
     FTM_PWM_init(FTM0, CH0, 10000, dianjispeed); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC1口
 }
 
@@ -179,8 +177,8 @@ void UART_Init()
 void EXTI_Init()
 {
     //----初始化外部中断---//
-    exti_init(PORTE, 0, rising_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部下拉
-    exti_init(PORTE, 1, rising_down); //VSYN----PORTE1 端口外部中断初始化 ，上升沿触发中断，内部下拉
+    exti_init(PORTE, 0, falling_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部下拉
+    exti_init(PORTE, 1, rising_down);  //VSYN----PORTE1 端口外部中断初始化 ，上升沿触发中断，内部下拉
 }
 void Image_Init()
 {
@@ -283,16 +281,17 @@ void ImageProc()
 
 void run()
 {
-    //   TimeCount++ ;
-    //   if(TimeCount>=5)  //5ms读一次速度值
-    //   {  TimeCount=0;
-    //      g_nRightMotorPulse =FTM2_CNT  ; //可直接读取正负值，变量类型要为s16类型！！！
-    //      FTM2_CNT = 0;
-    //      g_nRightMotorPulseSigma+=g_nRightMotorPulse;
+    TimeCount++;
+    if (TimeCount >= 5) //5ms读一次速度值
+    {
+        TimeCount = 0;
+        g_nRightMotorPulse = FTM2_CNT; //可直接读取正负值，变量类型要为s16类型！！！
+        FTM2_CNT = 0;
+        g_nRightMotorPulseSigma += g_nRightMotorPulse;
 
-    //g_nLeftMotorPulse =FTM1_CNT  ;
-    //FTM1_CNT = 0;
-    //g_nLeftMotorPulseSigma +=g_nLeftMotorPulse;
-    //  }
+        g_nLeftMotorPulse = FTM1_CNT;
+        FTM1_CNT = 0;
+        g_nLeftMotorPulseSigma += g_nLeftMotorPulse;
+    }
 }
 

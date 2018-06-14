@@ -210,12 +210,12 @@ void PORTE_IRQHandler()
         { 
           if(rowCnt>10)
           {  
-            for(lie=0;lie<130;lie++)   //130  延时修改，可以调节图像的左右
+            for(lie=0;lie<70;lie++)   //130  延时修改，可以调节图像的左右
             {
             asm("nop");
             asm("nop");
             }
-            DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTD_BYTE0_IN, Buffer1[rowCnt-11], PTA19, DMA_BYTE1, COL, DMA_falling_down);
+            DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTD_BYTE0_IN, Buffer1[rowCnt-11], PTA19, DMA_BYTE1, COL, DMA_rising_down);
             DMA_EN(DMA_CH4); 
           }
           rowCnt++;
