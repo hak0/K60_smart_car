@@ -60,7 +60,7 @@
 
 //      模块通道    端口          可选范围              建议
 #define FTM2_CH0    PTA10       //PTA10、PTB18
-#define FTM2_CH1    PTA11       //PTA11、PTB19
+#define FTM2_CH1    PTB19       //PTA11、PTB19
 /*
 #define FTM2_CH2                //空
 #define FTM2_CH3                //空
