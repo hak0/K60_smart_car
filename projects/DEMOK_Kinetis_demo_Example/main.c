@@ -78,6 +78,8 @@ s16 g_nLeftMotorPulse, g_nRightMotorPulse, g_nLeftMotorPulseSigma,
 s16 g_LeftMotorPWM=0, g_RightMotorPWM=0;    // 左右电机PWM值
 u8 g_LeftMotorBrake, g_RightMotorBrake; // 左右电机刹车信号
 
+u16 tof_value = 0; //tof测得的距离值
+
 extern u8 TIME1flag_100ms, flag_1ms;
 
 volatile u32 rowCnt = 0; //行计数
@@ -127,6 +129,7 @@ void main()
     Image_Init(); //----图像数组初始化
     EnableInterrupts;
     uart_irq_EN(UART4);
+    uart_irq_EN(UART3);
     uart_putchar(UART4, 'S');
     uart_putchar(UART4, 't');
     uart_putchar(UART4, 'a');
@@ -173,7 +176,8 @@ void PWM_Init()
 
 void UART_Init()
 {
-    uart_init(UART4, 115200); //115200);//115200);      //初始化串口1-蓝牙串口 波特率为115200
+    uart_init(UART4, 115200); //115200);//115200);      //初始化串口4-蓝牙串口 波特率为115200
+    uart_init(UART3, 9600); //115200);//115200);      //初始化串口3-TOF串口 波特率为9600
 }
 
 void EXTI_Init()

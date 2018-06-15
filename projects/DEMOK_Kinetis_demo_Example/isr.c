@@ -8,9 +8,13 @@
 #include "include.h"
 
 char data_receive[25];
-int num222 = 0;
+char tof_receive[5];
+u8 tof_num_flag = 0;
+int index_bt = 0;
+int index_tof = 0;
 unsigned char Is_SendPhoto = 0;
 unsigned char V_Cnt = 0;
+extern u16 tof_value;            //tof测得的距离
 extern unsigned short DuoCenter; ////舵机中间值 120HZ
 extern unsigned short dianjispeed;
 extern u8 ensend; //允许发送
@@ -44,8 +48,8 @@ void USART4_IRQHandler(void)
     //DisableInterrupts;		    //关总中断
     //接收一个字节数据并回发
     ch = uart_getchar(UART4); //接收到一个数据
-    data_receive[num222] = ch;
-    num222++;
+    data_receive[index_bt] = ch;
+    index_bt++;
     if (data_receive[0] == '#') //标识头
     {
         if (ch == '$') {
@@ -78,19 +82,44 @@ void USART4_IRQHandler(void)
             {
                 dPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
             }
-            for (num222 = 0; num222 < 10; num222++)
-                data_receive[num222] = 0x00;
-            num222 = 0;
+            for (index_bt = 0; index_bt < 10; index_bt++)
+                data_receive[index_bt] = 0x00;
+            index_bt = 0;
         }
-        if (num222 > 12)
-            num222 = 0;
+        if (index_bt > 12)
+            index_bt = 0;
     } else {
-        for (num222 = 0; num222 < 10; num222++)
-            data_receive[num222] = 0x00;
-        num222 = 0;
+        for (index_bt = 0; index_bt < 10; index_bt++)
+            data_receive[index_bt] = 0x00;
+        index_bt = 0;
     }
     //EnableInterrupts;		    //开总中断
     //uart_putchar(UART0,'A');
+}
+
+void USART3_IRQHandler(void)
+{
+    //TODO:利用电脑修改TOF设置，以最高频率发送
+    uint8 ch;
+    ch = uart_getchar(UART3);
+    if (ch == '\n') { // 起始标记，开始保存接收的数据
+        for (index_tof = 0; index_tof < 5; index_tof++) {
+            tof_receive[index_tof] = 0x00; //先清空记录接收数据的数组
+        }
+        index_tof = 0;      //下标归位
+        tof_num_flag = 1;   //表示接下来的数据是数字，保存
+    } else if ((ch == 'm') && (tof_num_flag == 1)) { //结束标记
+        tof_num_flag = 0;   //表示接下来的数据是字母和换行符，丢弃
+        tof_value = 0;
+        for (; index_tof >= 0; index_tof--) { //将数组中的值转换为数字并保存到对应变量
+            tof_value += tof_receive[index_tof];
+            tof_value *= 10;
+            index_tof--;
+        }
+    } else if (tof_num_flag) { //保存接收的数据到数组
+        tof_receive[index_tof] = ch - '0';
+        index_tof++;
+    }
 }
 
 /*************************************************************************
