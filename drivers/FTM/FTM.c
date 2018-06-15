@@ -287,7 +287,7 @@ void FTM_PWM_init(FTMn ftmn, CHn ch, u32 freq, u32 duty)
             else if(FTM2_CH1 == PTB19)
             {
                 SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
-                PORT_PCR_REG(PORTA_BASE_PTR, 19) = PORT_PCR_MUX(3);  // PTB19
+                PORT_PCR_REG(PORTB_BASE_PTR, 19) = PORT_PCR_MUX(3);  // PTB19
             }
             else
             {

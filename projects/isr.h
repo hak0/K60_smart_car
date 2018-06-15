@@ -36,8 +36,8 @@
 #undef  VECTOR_020
 #define VECTOR_020    DMA_CH4_Handler
 
-#undef  VECTOR_061                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
-#define VECTOR_061    USART0_IRQHandler   //重新定义63号中断的ISR：UART1：Single interrupt vector for UART status sources
+#undef  VECTOR_069                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
+#define VECTOR_069    USART4_IRQHandler   //重新定义70号中断的ISR：UART4：Single interrupt vector for UART status sources
 
 //#undef  VECTOR_063                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
 //#define VECTOR_063    USART1_IRQHandler   //重新定义63号中断的ISR：UART1：Single interrupt vector for UART status sources
@@ -64,7 +64,7 @@
 extern void PendSV_Handler(void);         //可悬起的系统调用中断服务函数
 extern void HardFault_Handler(void);      //发生硬件上访（程序跑飞）
 extern void SysTick_Handler(void);        //滴答时钟(os 用到)
-extern void USART0_IRQHandler();          //串口1 中断接收函数
+extern void USART4_IRQHandler();          //串口1 中断接收函数
 extern void PIT0_IRQHandler();            //PIT0 定时中断服务函数
 //extern void PORTA_IRQHandler();           //PORTA中断服务函数
 //extern void PORTB_IRQHandler();           //PORTB中断服务函数
@@ -126,8 +126,8 @@ extern void DMA_CH4_Handler(void);              //DMA通道4的中断服务函数
 #undef  VECTOR_020
 #define VECTOR_020    DMA_CH4_Handler 
 
-#undef  VECTOR_061                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
-#define VECTOR_061    USART0_IRQHandler   //重新定义63号中断的ISR：UART1：Single interrupt vector for UART status sources
+#undef  VECTOR_069                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
+#define VECTOR_069    USART4_IRQHandler   //重新定义63号中断的ISR：UART1：Single interrupt vector for UART status sources
 
 #undef  VECTOR_078
 #define VECTOR_078    FTM0_IRQHandler     //FTM0输入捕捉中断 
@@ -163,7 +163,7 @@ extern void DMA_CH4_Handler(void);              //DMA通道4的中断服务函数
 extern void PendSV_Handler(void);         //可悬起的系统调用中断服务函数
 extern void HardFault_Handler(void);      //发生硬件上访（程序跑飞）
 extern void SysTick_Handler(void);        //滴答时钟(os 用到)
-extern void USART0_IRQHandler();          //串口0 中断接收函数
+extern void USART4_IRQHandler();          //串口4 中断接收函数
 extern void PIT0_IRQHandler();            //PIT0 定时中断服务函数
 extern void PIT1_IRQHandler();            //PIT1 定时中断服务函数
 //extern void PIT2_IRQHandler();            //PIT2 定时中断服务函数

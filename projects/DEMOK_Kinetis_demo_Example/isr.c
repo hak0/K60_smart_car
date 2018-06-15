@@ -32,18 +32,18 @@ u8 TIME1flag_100ms = 0;
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
 *
-*  函数名称：USART0_IRQHandler
-*  功能说明：串口1 中断 接收 服务函数
+*  函数名称：USART4_IRQHandler
+*  功能说明：串口5 中断 接收 服务函数
 *  参数说明：无
 *  函数返回：无
 *
 *************************************************************************/
-void USART0_IRQHandler(void)
+void USART4_IRQHandler(void)
 {
     uint8 ch;
     //DisableInterrupts;		    //关总中断
     //接收一个字节数据并回发
-    ch = uart_getchar(UART0); //接收到一个数据
+    ch = uart_getchar(UART4); //接收到一个数据
     data_receive[num222] = ch;
     num222++;
     if (data_receive[0] == '#') //标识头
@@ -52,14 +52,7 @@ void USART0_IRQHandler(void)
             if (data_receive[1] == 'D') //舵机中值
             {
                 DuoCenter = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
-                Dis_num(70, 0, DuoCenter);
-                FTM_PWM_Duty(FTM1, CH0, DuoCenter);
-            }
-            if (data_receive[1] == 'S') //速度参数
-            {
-                dianjispeed = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
-                Dis_num(70, 0, dianjispeed);
-                speedmodi = 1;
+                FTM_PWM_Duty(FTM2, CH1, DuoCenter);
             }
             if (data_receive[1] == 'Y') // 允许摄像头上传
             {
@@ -80,12 +73,10 @@ void USART0_IRQHandler(void)
             if (data_receive[1] == 'P') //舵机比例系数
             {
                 servPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
-                Dis_num(70, 2, servPram);
             }
             if (data_receive[1] == 'F') //舵机微分系数
             {
                 dPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
-                Dis_num(70, 3, dPram);
             }
             for (num222 = 0; num222 < 10; num222++)
                 data_receive[num222] = 0x00;

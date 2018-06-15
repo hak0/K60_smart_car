@@ -8,10 +8,10 @@
 #include "common.h"
 #include "include.h"
 
-#define servMotorCenture 780 //880 //920 //960 //1710     //舵机中心位置
-#define servMotorLeft 635    //730 //770  //1580
+#define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
+#define servMotorNear 1160    //730 //770  //1580
 //舵机左极限，很关键，限幅防止舵机打死
-#define servMotorRight 925 //1030 //1070 //1050 //1840
+#define servMotorFar 550 //1030 //1070 //1050 //1840
 //舵机右极限，很关键，限s幅防止舵机打死
 
 #define cmosrow 150
@@ -72,10 +72,11 @@ s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;
 u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;
 //
 unsigned short DuoCenter; //舵机中间值 120HZ
-unsigned short dianjispeed;
 s32 TimeCount = 0; //1ms中断标志
 s16 g_nLeftMotorPulse, g_nRightMotorPulse, g_nLeftMotorPulseSigma,
     g_nRightMotorPulseSigma;
+s16 g_LeftMotorPWM=0, g_RightMotorPWM=0;    // 左右电机PWM值
+u8 g_LeftMotorBrake, g_RightMotorBrake; // 左右电机刹车信号
 
 extern u8 TIME1flag_100ms, flag_1ms;
 
@@ -92,6 +93,8 @@ void UART_Init();
 void EXTI_Init();
 void Image_Init();
 void run();
+void turn_off_light();
+void update_pwm();
 void CountThreshole(void);
 void datatrans();
 //-----------------主函数--------------------
@@ -100,7 +103,6 @@ void main()
     u8 sccb_ack;
     u16 discnt;
     DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
-    dianjispeed = 1400;
     DuoDir = 0;   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1; //0 舵机调模式  >0 正常工作模式
     ensend = 0;
@@ -109,14 +111,13 @@ void main()
     row_mid = 150;
     DisableInterrupts; //关闭中断开始初始化数据
 
-    FTM1_QUAD_Iint(); //正交解码测速  A相---PTA8  B相---PTA9
+    FTM1_QUAD_Iint(); //正交解码测速  A相---PTA12  B相---PTA13
     //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
 
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
     sccb_init(); //-----SCCB初始化，用于配置摄像头状态
     sccb_ack = sccb_refresh();
     PWM_Init(); //-----PWM初始化，用于初始化舵机电机的输出
-
     EXTI_Init();           //-----外部中断初始化，用于摄像头中断触发
     UART_Init();           //-----UART初始化，用于初始化串口
     pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
@@ -133,23 +134,12 @@ void main()
     uart_putchar(UART4, 't');
     uart_putchar(UART4, '.');
     uart_putchar(UART4, '.');
-    LCD_P6x8Str(0, 0, "DuoCenter:");
-    Dis_num(70, 0, DuoCenter);
-    LCD_P6x8Str(0, 1, "Speed:");
-    Dis_num(70, 1, dianjispeed);
-    LCD_P6x8Str(0, 2, "Duo_P:");
-    Dis_num(70, 2, servPram);
-    LCD_P6x8Str(0, 3, "Duo_D:");
-    Dis_num(70, 3, dPram);
-    LCD_P6x8Str(0, 4, "Row_mid:");
-    Dis_num(70, 4, row_mid);
-    LCD_P6x8Str(0, 5, "L:         R:");
-    if (sccb_ack == 0) //OV7640初始化成功
-        LCD_P6x8Str(0, 7, "OV7725 SCCB OK");
-    else
-        LCD_P6x8Str(0, 7, "OV7725 SCCB ER");
+
+    g_LeftMotorPWM=1400;    //
+
     rowCnt = 0;
     while (1) {
+        update_pwm();       //更新输出到驱动板的pwm值
         if (VSYN_Flag == 1) //完成一幅图像采集
         {
             DisableInterrupts;
@@ -162,18 +152,23 @@ void main()
 
 void GPIO_Init()
 {
-    gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTB, 16, GPI_UP_PF, 1);        //初始化PTB16为电平输入，上拉，接受编码器方向
     gpio_init(PORTB, 17, GPO, encoder_select); //初始化PTB17为电平输出，，选择当前检测的编码器
-    gpio_init(PORTA, 17, GPO, 1);       //初始化PTE0为高电平输出---LED0
-    gpio_set(PORTA, 17, 1);             //设置PTE0为高电平输出，LED0灭
-                                        //如果之后初始化成功，会点亮灯。
+    gpio_init(PORTA, 17, GPO, 1);              //初始化PTE0为高电平输出---LED0
+    gpio_set(PORTA, 17, 1);                    //设置PTE0为高电平输出，LED0灭
+    gpio_init(PORTE, 7, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTE, 8, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTE, 9, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTE, 10, GPO, 0);              //初始化PTB17为电平输出，，选择当前检测的编码器
+                                               //如果之后初始化成功，会点亮灯。
 }
 
 void PWM_Init()
 {
     FTM_PWM_init(FTM2, CH1, 50, DuoCenter); //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM2_CH1对应PTB19口
     // 要改变占空比，用FTM_PWM_Duty
-    FTM_PWM_init(FTM0, CH0, 10000, dianjispeed); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC1口
+    FTM_PWM_init(FTM0, CH0, 10000, 0); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC1口,左侧电机
+    FTM_PWM_init(FTM0, CH1, 10000, 0); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC2口,右侧电机
 }
 
 void UART_Init()
@@ -294,19 +289,70 @@ void run()
     //uart_putchar(UART4, TimeCount | 0xFF);
     if (TimeCount >= 2) //20ms读一次速度值
     {
+        g_LeftMotorPWM= (g_LeftMotorPWM == 1400)?2800:1400; //TODO:delete
         TimeCount = 0;
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
         /* encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反 */
-        if (encoder_select){
-            g_nLeftMotorPulse = FTM1_CNT;
-            g_nLeftMotorPulseSigma += encoder_dir ? g_nLeftMotorPulse : -g_nLeftMotorPulse;
+        if (encoder_select) {
+            g_nLeftMotorPulse = encoder_dir ? FTM1_CNT : -FTM1_CNT;
+            g_nLeftMotorPulseSigma += g_nLeftMotorPulse;
         } else {
-            g_nRightMotorPulse = FTM1_CNT;
-            g_nRightMotorPulseSigma += encoder_dir ? g_nRightMotorPulse : -g_nRightMotorPulse;
+            g_nRightMotorPulse = encoder_dir ? FTM1_CNT : -FTM1_CNT;
+            g_nRightMotorPulseSigma += g_nRightMotorPulse;
         }
         FTM1_CNT = 0;
-        encoder_select = !encoder_select;   //编码器选通位取反
-        gpio_set(PORTB, 17, encoder_select);    //编码器选通位电平输出,切换到另一侧编码器
+        encoder_select = !encoder_select;    //编码器选通位取反
+        gpio_set(PORTB, 17, encoder_select); //编码器选通位电平输出,切换到另一侧编码器
     }
+}
+
+// 还需要单独加上刹车的函数，如果目标速度和当前速度相差太大，可直接调用刹车
+void update_pwm()
+{
+    /* 根据g_xxxMotorPWM调整施加到电机驱动的pwm值 */
+    /* 左侧PTE7向前,PTE9向后,数字量设置 */
+    if (g_LeftMotorBrake) { //刹车
+        gpio_set(PORTE, 7, 1);
+        gpio_set(PORTE, 9, 1);
+    } else if (g_LeftMotorPWM > 0) { //向前
+        gpio_set(PORTE, 7, 1);
+        gpio_set(PORTE, 9, 0);
+    } else if (g_LeftMotorPWM < 0) { // 向后
+        gpio_set(PORTE, 7, 0);
+        gpio_set(PORTE, 9, 1);
+    } else {                        // 停车
+        gpio_set(PORTE, 7, 0);
+        gpio_set(PORTE, 9, 0);
+    }
+    /* 左侧PWM信号设置 */
+    FTM_PWM_Duty(FTM0, CH0, abs(g_LeftMotorPWM));
+    /* 右侧PTE8向前,PTE10向后,数字量设置 */
+    if (g_RightMotorBrake) { //刹车
+        gpio_set(PORTE, 8, 1);
+        gpio_set(PORTE, 10, 1);
+    } else if (g_RightMotorPWM > 0) { //向前
+        gpio_set(PORTE, 8, 1);
+        gpio_set(PORTE, 10, 0);
+    } else if (g_RightMotorPWM < 0) { // 向后
+        gpio_set(PORTE, 8, 0);
+        gpio_set(PORTE, 10, 1);
+    } else {                        // 停车
+        gpio_set(PORTE, 8, 0);
+        gpio_set(PORTE, 10, 0);
+    }
+    /* 右侧PWM信号设置 */
+    FTM_PWM_Duty(FTM0, CH1, abs(g_RightMotorPWM));
+}
+void turn_off_light()
+{
+    /* 快把浴霸关上!(误) */
+    /* 伸出挡板，挡光 */
+    DuoCenter = servMotorFar;
+    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
+    /* 软件延时500ms,此时除了中断什么都不会做 */
+    delay();
+    /* 收回挡板 */
+    DuoCenter = servMotorNear;
+    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
 }
 
