@@ -1,4 +1,4 @@
-//TODO:搞定PORTE的外部中断
+//TODO:正式运行时将options-compiler中的optimization开高
 //////////////////////////////////////////
 ////         杭州红树伟业      ///////////
 ///   http://shop36538723.taobao.com /////
@@ -296,16 +296,15 @@ void run()
     {
         TimeCount = 0;
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
-        encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反
-        FTM1_CNT = 0;
+        /* encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反 */
         if (encoder_select){
             g_nLeftMotorPulse = FTM1_CNT;
             g_nLeftMotorPulseSigma += encoder_dir ? g_nLeftMotorPulse : -g_nLeftMotorPulse;
         } else {
             g_nRightMotorPulse = FTM1_CNT;
-            g_nRightMotorPulseSigma += encoder_dir ? g_nLeftMotorPulse : -g_nLeftMotorPulse;
+            g_nRightMotorPulseSigma += encoder_dir ? g_nRightMotorPulse : -g_nRightMotorPulse;
         }
-
+        FTM1_CNT = 0;
         encoder_select = !encoder_select;   //编码器选通位取反
         gpio_set(PORTB, 17, encoder_select);    //编码器选通位电平输出,切换到另一侧编码器
     }
