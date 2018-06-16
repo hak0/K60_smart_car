@@ -102,7 +102,7 @@ void USART3_IRQHandler(void)
     //TODO:利用电脑修改TOF设置，以最高频率发送
     uint8 ch;
     ch = uart_getchar(UART3);
-    if (ch == '\n') { // 起始标记，开始保存接收的数据
+    if (ch == 0x0A) { // 起始标记，开始保存接收的数据
         for (index_tof = 0; index_tof < 5; index_tof++) {
             tof_receive[index_tof] = 0x00; //先清空记录接收数据的数组
         }

@@ -17,6 +17,14 @@
 #define cmosrow 150
 #define cmoscol 280    //该值必须是8的整数倍 35*8 //实际处理数据分辨率 280*150
 #define comscolbyte 35 // =cmoscol/8
+#define duty_max 10000
+
+//定义方向
+#define left 0
+#define right 1
+#define front 0
+#define back 2
+//这样，描述方向可以用front|left这种格式
 
 u16 servPram; //舵机转角比例系数 放大10倍
 u16 dPram;    //舵机转角积分系数  放大100倍
@@ -55,6 +63,11 @@ u8 ensend; //允许发送
 u8 enpwm;
 u8 speedmodi; //速度修改标志
 
+typedef enum { left = 0,
+    right = 1 } side;
+typedef enum { front = 0,
+    back = 1 } front_back;
+
 u8 DuoDir; //转向时方向
 u8 workmode;
 
@@ -72,11 +85,12 @@ s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;
 u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;
 //
 unsigned short DuoCenter; //舵机中间值 120HZ
-s32 TimeCount = 0; //1ms中断标志
-s16 g_nLeftMotorPulse, g_nRightMotorPulse, g_nLeftMotorPulseSigma,
-    g_nRightMotorPulseSigma;
-s16 g_LeftMotorPWM=0, g_RightMotorPWM=0;    // 左右电机PWM值
-u8 g_LeftMotorBrake, g_RightMotorBrake; // 左右电机刹车信号
+s32 TimeCount = 0;        //1ms中断标志
+s16 g_nMotorPulse[2];
+s32 g_nMotorPulseSigma[2];
+s16 g_MotorPWM[2] = { 0, 0 }; // 左右电机PWM值
+u8 g_MotorBrake[2];           // 左右电机刹车信号
+s16 speed[2] = { 0, 0 };      // 左右电机设置速度值
 
 u16 tof_value = 0; //tof测得的距离值
 
@@ -85,7 +99,7 @@ extern u8 TIME1flag_100ms, flag_1ms;
 volatile u32 rowCnt = 0; //行计数
 
 u8 encoder_dir;        //编码器方向
-u8 encoder_select = 1; //选择编码器
+u8 encoder_select = 1; //选择编码器,0表示左1表示右
 
 //-----------------函数声明------------------
 void ImageProc();
@@ -99,31 +113,30 @@ void turn_off_light();
 void update_pwm();
 void CountThreshole(void);
 void datatrans();
+void PID();
 //-----------------主函数--------------------
 void main()
 {
     u8 sccb_ack;
     u16 discnt;
     DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
-    DuoDir = 0;   //如果小车转向和实际要求相反，把该值修改成 1
-    workmode = 1; //0 舵机调模式  >0 正常工作模式
+    DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
+    workmode = 1;                 //0 舵机调模式  >0 正常工作模式
     ensend = 0;
     servPram = servPram1;
     dPram = dPram1;
     row_mid = 150;
     DisableInterrupts; //关闭中断开始初始化数据
-
-    FTM1_QUAD_Iint(); //正交解码测速  A相---PTA12  B相---PTA13
+    FTM1_QUAD_Iint();  //正交解码测速  A相---PTA12  B相---PTA13
     //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
 
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
     sccb_init(); //-----SCCB初始化，用于配置摄像头状态
     sccb_ack = sccb_refresh();
-    PWM_Init(); //-----PWM初始化，用于初始化舵机电机的输出
-    EXTI_Init();           //-----外部中断初始化，用于摄像头中断触发
-    UART_Init();           //-----UART初始化，用于初始化串口
-    pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
-    //TODO:添加监视test_time
+    PWM_Init();           //-----PWM初始化，用于初始化舵机电机的输出
+    EXTI_Init();          //-----外部中断初始化，用于摄像头中断触发
+    UART_Init();          //-----UART初始化，用于初始化串口
+    pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 1ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
     oled_init();  //oled初始化
     Image_Init(); //----图像数组初始化
@@ -137,8 +150,6 @@ void main()
     uart_putchar(UART4, 't');
     uart_putchar(UART4, '.');
     uart_putchar(UART4, '.');
-
-    g_LeftMotorPWM=1400;    //
 
     rowCnt = 0;
     while (1) {
@@ -177,7 +188,7 @@ void PWM_Init()
 void UART_Init()
 {
     uart_init(UART4, 115200); //115200);//115200);      //初始化串口4-蓝牙串口 波特率为115200
-    uart_init(UART3, 9600); //115200);//115200);      //初始化串口3-TOF串口 波特率为9600
+    uart_init(UART3, 9600);   //115200);//115200);      //初始化串口3-TOF串口 波特率为9600
 }
 
 void EXTI_Init()
@@ -288,26 +299,21 @@ void ImageProc()
 void run()
 {
     TimeCount++;
-    //uart_putchar(UART4, 0X55);
-    //uart_putchar(UART4, TimeCount >> 4);
-    //uart_putchar(UART4, TimeCount | 0xFF);
-    if (TimeCount >= 2) //20ms读一次速度值
+    if (TimeCount % 20 == 0) //20ms读一次速度值
     {
-        g_LeftMotorPWM= (g_LeftMotorPWM == 1400)?2800:1400; //TODO:delete
         TimeCount = 0;
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
         /* encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反 */
-        if (encoder_select) {
-            g_nLeftMotorPulse = encoder_dir ? FTM1_CNT : -FTM1_CNT;
-            g_nLeftMotorPulseSigma += g_nLeftMotorPulse;
-        } else {
-            g_nRightMotorPulse = encoder_dir ? FTM1_CNT : -FTM1_CNT;
-            g_nRightMotorPulseSigma += g_nRightMotorPulse;
-        }
-        FTM1_CNT = 0;
-        encoder_select = !encoder_select;    //编码器选通位取反
-        gpio_set(PORTB, 17, encoder_select); //编码器选通位电平输出,切换到另一侧编码器
+
+        //encoder_select
+        g_nMotorPulse[encoder_select] = encoder_dir ? FTM1_CNT : -FTM1_CNT;  //更新对应的测速变量
+        g_nMotorPulseSigma[encoder_select] += g_nMotorPulse[encoder_select]; //更新对应测路程变量
+        FTM1_CNT = 0;                                                        //编码器计数变量重置
+        encoder_select = !encoder_select;                                    //编码器选通位取反
+        gpio_set(PORTB, 17, encoder_select);                                 //编码器选通位电平输出,切换到另一侧编码器
     }
+    if (TimeCount >= 1000)
+        TimeCount = 0; //每1s清零计数变量
 }
 
 // 还需要单独加上刹车的函数，如果目标速度和当前速度相差太大，可直接调用刹车
@@ -315,37 +321,26 @@ void update_pwm()
 {
     /* 根据g_xxxMotorPWM调整施加到电机驱动的pwm值 */
     /* 左侧PTE7向前,PTE9向后,数字量设置 */
-    if (g_LeftMotorBrake) { //刹车
-        gpio_set(PORTE, 7, 1);
-        gpio_set(PORTE, 9, 1);
-    } else if (g_LeftMotorPWM > 0) { //向前
-        gpio_set(PORTE, 7, 1);
-        gpio_set(PORTE, 9, 0);
-    } else if (g_LeftMotorPWM < 0) { // 向后
-        gpio_set(PORTE, 7, 0);
-        gpio_set(PORTE, 9, 1);
-    } else {                        // 停车
-        gpio_set(PORTE, 7, 0);
-        gpio_set(PORTE, 9, 0);
+    const u8 DIRpins[4] = { 7, 8, 9, 10 };
+    const CHn PWMCH[2] = { CH0, CH1 };
+
+    for (u8 lr = left; lr <= right; lr++) {
+        if (g_MotorBrake[lr]) { //刹车
+            gpio_set(PORTE, DIRpins[lr | front], 1);
+            gpio_set(PORTE, DIRpins[lr | back], 1);
+        } else if (g_MotorPWM[lr] > 0) { //向前
+            gpio_set(PORTE, DIRpins[lr | front], 1);
+            gpio_set(PORTE, DIRpins[lr | back], 0);
+        } else if (g_MotorPWM[lr] < 0) { // 向后
+            gpio_set(PORTE, DIRpins[lr | front], 0);
+            gpio_set(PORTE, DIRpins[lr | back], 1);
+        } else { // 停车
+            gpio_set(PORTE, DIRpins[lr | front], 0);
+            gpio_set(PORTE, DIRpins[lr | back], 0);
+        }
+        /* 左侧PWM信号设置 */
+        FTM_PWM_Duty(FTM0, PWMCH[lr], abs(g_MotorPWM[lr]));
     }
-    /* 左侧PWM信号设置 */
-    FTM_PWM_Duty(FTM0, CH0, abs(g_LeftMotorPWM));
-    /* 右侧PTE8向前,PTE10向后,数字量设置 */
-    if (g_RightMotorBrake) { //刹车
-        gpio_set(PORTE, 8, 1);
-        gpio_set(PORTE, 10, 1);
-    } else if (g_RightMotorPWM > 0) { //向前
-        gpio_set(PORTE, 8, 1);
-        gpio_set(PORTE, 10, 0);
-    } else if (g_RightMotorPWM < 0) { // 向后
-        gpio_set(PORTE, 8, 0);
-        gpio_set(PORTE, 10, 1);
-    } else {                        // 停车
-        gpio_set(PORTE, 8, 0);
-        gpio_set(PORTE, 10, 0);
-    }
-    /* 右侧PWM信号设置 */
-    FTM_PWM_Duty(FTM0, CH1, abs(g_RightMotorPWM));
 }
 void turn_off_light()
 {
@@ -360,3 +355,28 @@ void turn_off_light()
     FTM_PWM_Duty(FTM2, CH1, DuoCenter);
 }
 
+void PID()
+{
+    /*--------------------------------------------------------------*/
+    static double e0[2] = { 0, 0 }, e1[2] = { 0, 0 }, e2[2] = { 0, 0 }, y0[2] = { 0, 0 }, y1[2] = { 0, 0 }, y2[2] = { 0, 0 };
+    const double Ki = 1; //选择比例积分调节器
+    const double Kd = 0;
+    const double Kp = 0.75;  //比例系数
+    const double Ti = 0.001; //积分时间常数
+    const double Td = 0.00;  //微分时间常数
+    const double T = 0.001;  //采样时间
+    const double a0 = Kp * (1.0 + Ki * T / Ti + Kd * Td / T);
+    const double a1 = Kp * (1.0 + 2.0 * Kd * Td / T);
+    const double a2 = Kp * Kd * Td / T;
+    for (u8 lr = left; lr <= right; lr++) {
+        y2[lr] = y1[lr];
+        y1[lr] = y0[lr];
+        y0[lr] = g_nMotorPulse[lr];
+        e0[lr] = speed[lr] - y0[lr];
+        e1[lr] = speed[lr] - y1[lr];
+        e2[lr] = speed[lr] - y2[lr];
+        g_MotorPWM[lr] = (a0 * e0[lr] - a1 * e1[lr] + a2 * e2[lr]); //PID控制器的算法
+                                                                    // 可能需要设置最小值和最大值
+                                                                    //
+    }
+}
