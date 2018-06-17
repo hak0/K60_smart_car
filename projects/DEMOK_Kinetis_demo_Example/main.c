@@ -63,11 +63,6 @@ u8 ensend; //允许发送
 u8 enpwm;
 u8 speedmodi; //速度修改标志
 
-typedef enum { left = 0,
-    right = 1 } side;
-typedef enum { front = 0,
-    back = 1 } front_back;
-
 u8 DuoDir; //转向时方向
 u8 workmode;
 
@@ -138,7 +133,7 @@ void main()
     UART_Init();          //-----UART初始化，用于初始化串口
     pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 1ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
-    oled_init();  //oled初始化
+    /* oled_init();  //oled初始化 */
     Image_Init(); //----图像数组初始化
     EnableInterrupts;
     uart_irq_EN(UART4);
@@ -296,6 +291,7 @@ void ImageProc()
     }
 }
 
+extern u8 tof_num_flag;
 void run()
 {
     TimeCount++;
@@ -312,6 +308,18 @@ void run()
         encoder_select = !encoder_select;                                    //编码器选通位取反
         gpio_set(PORTB, 17, encoder_select);                                 //编码器选通位电平输出,切换到另一侧编码器
     }
+    if (TimeCount % 40 == 0)
+    {
+        //每读取一次左右编码器的速度值就利用PID更新一次PWM
+        PID();
+        if (0 == 1){
+          uart_putchar(UART4, tof_value/1000); //tof data
+          uart_putchar(UART4, tof_value/100%10); //tof_data
+          uart_putchar(UART4, tof_value/10%10); //tof_data
+          uart_putchar(UART4, tof_value%10); //tof_data
+          uart_putchar(UART4, '\n'); //tof_data
+        }
+    }
     if (TimeCount >= 1000)
         TimeCount = 0; //每1s清零计数变量
 }
@@ -321,25 +329,25 @@ void update_pwm()
 {
     /* 根据g_xxxMotorPWM调整施加到电机驱动的pwm值 */
     /* 左侧PTE7向前,PTE9向后,数字量设置 */
-    const u8 DIRpins[4] = { 7, 8, 9, 10 };
+    const u8 DIRpins[4] = { 7, 8, 9, 10 }; //左前，右前，左后，右后
     const CHn PWMCH[2] = { CH0, CH1 };
 
-    for (u8 lr = left; lr <= right; lr++) {
-        if (g_MotorBrake[lr]) { //刹车
-            gpio_set(PORTE, DIRpins[lr | front], 1);
-            gpio_set(PORTE, DIRpins[lr | back], 1);
-        } else if (g_MotorPWM[lr] > 0) { //向前
-            gpio_set(PORTE, DIRpins[lr | front], 1);
-            gpio_set(PORTE, DIRpins[lr | back], 0);
-        } else if (g_MotorPWM[lr] < 0) { // 向后
-            gpio_set(PORTE, DIRpins[lr | front], 0);
-            gpio_set(PORTE, DIRpins[lr | back], 1);
+    for (u8 side = left; side <= right; side++) {
+        if (g_MotorBrake[side]) { //刹车
+            gpio_set(PORTE, DIRpins[side | front], 0);
+            gpio_set(PORTE, DIRpins[side | back], 0);
+        } else if (g_MotorPWM[side] > 0) { //向前
+            gpio_set(PORTE, DIRpins[side | front], 1);
+            gpio_set(PORTE, DIRpins[side | back], 0);
+        } else if (g_MotorPWM[side] < 0) { // 向后
+            gpio_set(PORTE, DIRpins[side | front], 0);
+            gpio_set(PORTE, DIRpins[side | back], 1);
         } else { // 停车
-            gpio_set(PORTE, DIRpins[lr | front], 0);
-            gpio_set(PORTE, DIRpins[lr | back], 0);
+            gpio_set(PORTE, DIRpins[side | front], 1);
+            gpio_set(PORTE, DIRpins[side | back], 1);
         }
         /* 左侧PWM信号设置 */
-        FTM_PWM_Duty(FTM0, PWMCH[lr], abs(g_MotorPWM[lr]));
+        FTM_PWM_Duty(FTM0, PWMCH[side], abs(g_MotorPWM[side]));
     }
 }
 void turn_off_light()
@@ -368,15 +376,17 @@ void PID()
     const double a0 = Kp * (1.0 + Ki * T / Ti + Kd * Td / T);
     const double a1 = Kp * (1.0 + 2.0 * Kd * Td / T);
     const double a2 = Kp * Kd * Td / T;
-    for (u8 lr = left; lr <= right; lr++) {
-        y2[lr] = y1[lr];
-        y1[lr] = y0[lr];
-        y0[lr] = g_nMotorPulse[lr];
-        e0[lr] = speed[lr] - y0[lr];
-        e1[lr] = speed[lr] - y1[lr];
-        e2[lr] = speed[lr] - y2[lr];
-        g_MotorPWM[lr] = (a0 * e0[lr] - a1 * e1[lr] + a2 * e2[lr]); //PID控制器的算法
-                                                                    // 可能需要设置最小值和最大值
-                                                                    //
+    for (u8 side = left; side <= right; side++) {
+        y2[side] = y1[side];
+        y1[side] = y0[side];
+        y0[side] = g_nMotorPulse[side];
+        e0[side] = speed[side] - y0[side];
+        e1[side] = speed[side] - y1[side];
+        e2[side] = speed[side] - y2[side];
+        g_MotorPWM[side] = (a0 * e0[side] - a1 * e1[side] + a2 * e2[side]); //PID控制器的算法
+                                                                            // 可能需要设置最小值和最大值
+    if (g_MotorPWM[side] >= 10000) g_MotorPWM[side] = 10000;
+    if (g_MotorPWM[side] <= -10000) g_MotorPWM[side] = -10000;
     }
 }
+

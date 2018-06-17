@@ -11,7 +11,7 @@ char data_receive[25];
 char tof_receive[5];
 u8 tof_num_flag = 0;
 int index_bt = 0;
-int index_tof = 0;
+int tof_index = 0;
 unsigned char Is_SendPhoto = 0;
 unsigned char V_Cnt = 0;
 extern u16 tof_value;            //tof测得的距离
@@ -101,24 +101,25 @@ void USART3_IRQHandler(void)
 {
     //TODO:利用电脑修改TOF设置，以最高频率发送
     uint8 ch;
+    uint8 i;
     ch = uart_getchar(UART3);
     if (ch == 0x0A) { // 起始标记，开始保存接收的数据
-        for (index_tof = 0; index_tof < 5; index_tof++) {
-            tof_receive[index_tof] = 0x00; //先清空记录接收数据的数组
+        for (tof_index = 0; tof_index < 5; tof_index++) {
+            tof_receive[tof_index] = 0x00; //先清空记录接收数据的数组
         }
-        index_tof = 0;      //下标归位
+        tof_index = 0;      //下标归位
         tof_num_flag = 1;   //表示接下来的数据是数字，保存
     } else if ((ch == 'm') && (tof_num_flag == 1)) { //结束标记
         tof_num_flag = 0;   //表示接下来的数据是字母和换行符，丢弃
         tof_value = 0;
-        for (; index_tof >= 0; index_tof--) { //将数组中的值转换为数字并保存到对应变量
-            tof_value += tof_receive[index_tof];
-            tof_value *= 10;
-            index_tof--;
+        for (i = 0; i < tof_index; i++) { //将数组中的值转换为数字并保存到对应变量
+            tof_value *= 10;  
+            tof_value += tof_receive[i] - '0';
         }
+        tof_index = 0;
     } else if (tof_num_flag) { //保存接收的数据到数组
-        tof_receive[index_tof] = ch - '0';
-        index_tof++;
+        tof_receive[tof_index] = ch;
+        tof_index++;
     }
 }
 
