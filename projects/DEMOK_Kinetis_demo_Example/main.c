@@ -117,7 +117,7 @@ void main()
     DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
     DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1;                 //0 舵机调模式  >0 正常工作模式
-    ensend = 0;
+    ensend = 1;
     servPram = servPram1;
     dPram = dPram1;
     row_mid = 150;
@@ -166,9 +166,13 @@ void GPIO_Init()
     gpio_init(PORTA, 17, GPO, 1);              //初始化PTE0为高电平输出---LED0
     gpio_set(PORTA, 17, 1);                    //设置PTE0为高电平输出，LED0灭
     gpio_init(PORTE, 7, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 7) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
     gpio_init(PORTE, 8, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 8) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
     gpio_init(PORTE, 9, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 9) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
     gpio_init(PORTE, 10, GPO, 0);              //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 10) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
                                                //如果之后初始化成功，会点亮灯。
 }
 
@@ -297,16 +301,15 @@ void run()
     TimeCount++;
     if (TimeCount % 20 == 0) //20ms读一次速度值
     {
-        TimeCount = 0;
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
-        /* encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反 */
+        //encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反
 
         //encoder_select
         g_nMotorPulse[encoder_select] = encoder_dir ? FTM1_CNT : -FTM1_CNT;  //更新对应的测速变量
         g_nMotorPulseSigma[encoder_select] += g_nMotorPulse[encoder_select]; //更新对应测路程变量
-        FTM1_CNT = 0;                                                        //编码器计数变量重置
         encoder_select = !encoder_select;                                    //编码器选通位取反
         gpio_set(PORTB, 17, encoder_select);                                 //编码器选通位电平输出,切换到另一侧编码器
+        FTM1_CNT = 0;                                                        //编码器计数变量重置
     }
     if (TimeCount % 40 == 0)
     {

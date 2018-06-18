@@ -7,6 +7,7 @@
 #include "common.h"
 #include "include.h"
 
+int delay_time=70;
 char data_receive[25];
 char tof_receive[5];
 u8 tof_num_flag = 0;
@@ -224,7 +225,7 @@ void PORTE_IRQHandler()
         //-------------DMA初始化通道4，数据源为PTD，每次存在数组ImageBuf[]指针中，PCLK接PTA19触发，每次传输1个字节，每次触发传输300次，上升沿触发
         else {
             if (rowCnt > 10) {
-                for (lie = 0; lie < 70; lie++) //130  延时修改，可以调节图像的左右
+                for (lie = 0; lie < delay_time; lie++) //130  延时修改，可以调节图像的左右
                 {
                     asm("nop");
                     asm("nop");

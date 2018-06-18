@@ -295,7 +295,7 @@ u8 sccb_refresh()
      ack1 = sccb_regWrite(0x42,OV7725_BDBase,0x99);
      ack1 = sccb_regWrite(0x42,OV7725_BDMStep,0x03);
      ack1 = sccb_regWrite(0x42,OV7725_SDE,0x04);
-     ack2 = sccb_regWrite(0x42,OV7725_BRIGHT,0x2A);  //值越大，图像越白
+     ack2 = sccb_regWrite(0x42,OV7725_BRIGHT,0x25);  //值越大，图像越白
      ack2 = sccb_regWrite(0x42,OV7725_CNST,0xFF); //环境很暗：0xff  环境很亮：0x00
      ack3 = sccb_regWrite(0x42,OV7725_SIGN,0x06);
      ack3 = sccb_regWrite(0x42,OV7725_UVADJ0,0x11);
