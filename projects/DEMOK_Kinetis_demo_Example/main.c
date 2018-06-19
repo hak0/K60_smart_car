@@ -8,6 +8,8 @@
 #include "common.h"
 #include "include.h"
 
+#define tof_value_min 300 //最小距离值，再小就触发灭灯
+
 #define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
 #define servMotorNear 1160    //730 //770  //1580
 //舵机左极限，很关键，限幅防止舵机打死
@@ -101,6 +103,10 @@ volatile u32 rowCnt = 0; //行计数
 u8 encoder_dir;        //编码器方向
 u8 encoder_select = 1; //选择编码器,0表示左1表示右
 
+u32 brake_start_time = 0;
+u32 back_start_time = 0;
+u8 move_back_flag = 0;
+
 //-----------------函数声明------------------
 void ImageProc();
 void GPIO_Init();
@@ -115,6 +121,7 @@ void CountThreshole(void);
 void datatrans();
 void PID();
 void TOFProc();
+void decide_speed();
 //-----------------主函数--------------------
 void main()
 {
@@ -124,12 +131,12 @@ void main()
     DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1;                 //0 舵机调模式  >0 正常工作模式
     ensend = 0;
-    entof = 1;
+    entof = 0;
     servPram = servPram1;
     dPram = dPram1;
     row_mid = 150;
     DisableInterrupts; //关闭中断开始初始化数据
-    FTM1_QUAD_Iint();  //正交解码测速  A相---PTA12  B相---PTA13
+    /* FTM1_QUAD_Iint();  //正交解码测速  A相---PTA12  B相---PTA13 */
     //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
 
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
@@ -138,7 +145,7 @@ void main()
     PWM_Init();           //-----PWM初始化，用于初始化舵机电机的输出
     EXTI_Init();          //-----外部中断初始化，用于摄像头中断触发
     UART_Init();          //-----UART初始化，用于初始化串口
-    pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 1ms
+    pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 10ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
     Image_Init(); //----图像数组初始化
     EnableInterrupts;
@@ -156,7 +163,6 @@ void main()
     while (1) {
         if (VSYN_Flag == 1) //完成一幅图像采集
         {
-            DisableInterrupts;
             ImageProc();
             VSYN_Flag = 0;
             EnableInterrupts;
@@ -169,16 +175,19 @@ void main()
             uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
             uart_putchar(UART4, '\n');                       //tof_data
         }
-        if (tof_value <= 180)
+        if ((!gpio_get(PORTB, 16) || !gpio_get(PORTB, 17)) || (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1))
             turn_off_light();
-        update_pwm(); //更新输出到驱动板的pwm值
+        decide_speed(); //根据光源位置状态决定PWM值
+        update_pwm();   //更新输出到驱动板的pwm值
     }
 }
 
 void GPIO_Init()
 {
-    gpio_init(PORTB, 16, GPI_UP_PF, 1);                                       //初始化PTB16为电平输入，上拉，接受编码器方向
-    gpio_init(PORTB, 17, GPO, encoder_select);                                //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTB, 17, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTE, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
+    /* gpio_init(PORTB, 17, GPO, encoder_select);                                //初始化PTB17为电平输出，，选择当前检测的编码器 */
     gpio_init(PORTA, 17, GPO, 1);                                             //初始化PTE0为高电平输出---LED0
     gpio_set(PORTA, 17, 1);                                                   //设置PTE0为高电平输出，LED0灭
     gpio_init(PORTE, 7, GPO, 0);                                              //初始化PTB17为电平输出，，选择当前检测的编码器
@@ -278,7 +287,7 @@ void get_light_position()
     }
     light_x = xsum / cnt;
     light_y = ysum / cnt;
-    see_light = (cnt > 0) ? 1 : 0;
+    see_light = (cnt > 10) ? 1 : 0;
 }
 
 void ImageProc()
@@ -315,8 +324,8 @@ void ImageProc()
 extern u8 tof_num_flag;
 void run()
 {
-    TimeCount++;
-    if (TimeCount % 20 == 0) //2ms读一次速度值
+#if 0 //测速相关
+    if (TimeCount % 20 == 0) //20ms读一次速度值
     {
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
         //encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反
@@ -328,10 +337,12 @@ void run()
         gpio_set(PORTB, 17, encoder_select);                                 //编码器选通位电平输出,切换到另一侧编码器
         FTM1_CNT = 0;                                                        //编码器计数变量重置
     }
-    if (TimeCount % 4 == 0) {
+    if (TimeCount % 40 == 0) {
         //每读取一次左右编码器的速度值就利用PID更新一次PWM
         /* PID(); */
     }
+#endif
+    /* if (TimeCount % 10 == 0) */
     if (TimeCount >= 1000)
         TimeCount = 0; //每1s清零计数变量
 }
@@ -358,24 +369,34 @@ void update_pwm()
             gpio_set(PORTE, DIRpins[side | front], 1);
             gpio_set(PORTE, DIRpins[side | back], 1);
         }
-        /* 左侧PWM信号设置 */
-        FTM_PWM_Duty(FTM0, PWMCH[side], abs(g_MotorPWM[side]));
+        /* PWM信号设置 */
+        if (g_MotorBrake[side])
+            FTM_PWM_Duty(FTM0, PWMCH[side], 0);
+        else
+            FTM_PWM_Duty(FTM0, PWMCH[side], abs(g_MotorPWM[side]));
     }
 }
 void turn_off_light()
 {
     /* 快把浴霸关上!(误) */
     /* 伸出挡板，挡光 */
-    DuoCenter = servMotorFar;
-    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
-    gpio_set(PORTE, 11, 1);                                                   //物理刹车
-    /* 软件延时500ms,此时除了中断什么都不会做 */
-    delayms(200);
-    /* 收回挡板 */
-    gpio_set(PORTE, 11, 0);                                                   //收回物理刹车
-    delayms(400);
-    DuoCenter = servMotorNear;
-    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
+    if (g_MotorBrake[left] == 0 && g_MotorBrake[right] == 0) {
+        brake_start_time = TimeCount;
+        g_MotorBrake[left] = 1;  //PWM置零
+        g_MotorBrake[right] = 1; //刹车标记始能
+        gpio_set(PORTE, 11, 1);  //物理刹车
+    } else if (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1) {
+        if ((TimeCount - brake_start_time) % 1000 >= 5)
+            gpio_set(PORTE, 11, 0); //收回物理刹车
+        if ((TimeCount - brake_start_time) % 1000 >= 20) {
+            g_MotorBrake[left] = 0;
+            g_MotorBrake[right] = 0;
+            if (!gpio_get(PORTE, 12)) {
+                move_back_flag = 1;
+                back_start_time = TimeCount;
+            } //如果没有光了，就开始后退
+        }
+    }
 }
 
 void PID()
@@ -423,13 +444,72 @@ void TOFProc()
     for (i = 0; i < 16; i++) {
         uart_pendchar(UART3, tof_receive + i);
     }
-    while (tof_receive[i++] != '\n')
-        ;                           //移动到起始标记\n后
-    while (tof_receive[i] != 'm') { //处理数字段
+    i = 0;
+    while (tof_receive[i++] != '\n' && i < sizeof(tof_receive))
+        ; //移动到起始标记\n后
+    if (i >= sizeof(tof_receive))
+        return;                                                //如果没有找到，退出
+    while (tof_receive[i] != 'm' && i < sizeof(tof_receive)) { //处理数字段
         tof_value *= 10;
         tof_value += tof_receive[i] - '0';
         i++;
     }
     tof_num_flag = 1;
+}
+
+void decide_speed()
+{
+    const u16 light_x_middle = 140;
+    const u16 pwm_max = 4000;
+    const u16 pwm_near = 1000;
+    const u16 pwm_min = 500;
+    const u16 pwm_rotate[2] = { 4000, 2000 };
+    /* const u16 tof_value_threshold = 800; */
+    const u16 tof_value_threshold = 50;
+    //三种情况
+    //1. 摄像头未捕获，TOF无反馈 -> 打转一段时间后寻光
+    //2. 摄像头未捕获，TOF反馈 -> 直行，根据TOF调速
+    //3. 摄像头捕获，TOF无反馈 -> 确定方向，前进
+    //4. 摄像头捕获，TOF反馈 -> 避障,向一侧转向,在TOF无反馈的基础上调整
+    if (move_back_flag) {
+        //倒退1s，不接收反驳
+        if ((TimeCount - back_start_time) % 1000 >= 20) {
+            move_back_flag = 0;
+        }
+        g_MotorPWM[left] = pwm_max * -0.6;
+        g_MotorPWM[right] = pwm_max * -0.6;
+        return;
+    }
+    if (tof_value >= tof_value_threshold && !see_light) {
+        // 打转找光,800ms打转,200ms前进
+        if (TimeCount <= 80) {
+            g_MotorPWM[left] = pwm_rotate[left];
+            g_MotorPWM[right] = pwm_rotate[right];
+        } else {
+            g_MotorPWM[left] = pwm_max * 0.6;
+            g_MotorPWM[right] = pwm_max * 0.6;
+        }
+        DuoCenter = servMotorNear; //收回挡板
+    }
+    if (tof_value < tof_value_threshold && !see_light) {
+        // 接近光源，调整速度
+        g_MotorPWM[left] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
+        g_MotorPWM[right] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
+        DuoCenter = servMotorFar; //伸出挡板
+    }
+    if (see_light) {
+        // 向光源移动，速度随光源远近调整
+        g_MotorPWM[left] = (pwm_max - pwm_near) * (143 - light_y) / 143 + pwm_near;
+        g_MotorPWM[right] = (pwm_max - pwm_near) * (143 - light_y) / 143 + pwm_near;
+        // 转向
+        if (light_x <= light_x_middle - 10) {
+            g_MotorPWM[left] -= 2000;
+        } else if (light_x >= light_x_middle + 10) {
+            g_MotorPWM[right] -= 2000;
+        }
+        DuoCenter = servMotorNear; //收回挡板
+        //TODO:需要加入TOF避障
+    }
+    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
 }
 

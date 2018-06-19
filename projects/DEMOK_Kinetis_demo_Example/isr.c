@@ -34,6 +34,7 @@ u8 SampleFlag = 0;
 extern u8 VSYN_Flag;
 extern void TOFProc();
 
+extern s32 TimeCount;        //计时
 unsigned char flag_1ms = 0;
 u8 TIME1flag_100ms = 0;
 /*************************************************************************
@@ -138,7 +139,7 @@ void PIT0_IRQHandler(void) //1ms
 {
     // LED_turn(LED1);             //LED1反转
     PIT_Flag_Clear(PIT0); //清中断标志位
-    flag_1ms = 1;         //1ms中断标志
+    TimeCount++;
     run();                //测速函数
 }
 #else
