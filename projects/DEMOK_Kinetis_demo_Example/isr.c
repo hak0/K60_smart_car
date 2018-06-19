@@ -7,14 +7,15 @@
 #include "common.h"
 #include "include.h"
 
-int delay_time=70;
+int delay_time = 70;
 char data_receive[25];
-char tof_receive[5];
-u8 tof_num_flag = 0;
 int index_bt = 0;
-int tof_index = 0;
+
 unsigned char Is_SendPhoto = 0;
 unsigned char V_Cnt = 0;
+extern char tof_receive[32];
+extern u8 tof_num_flag;
+extern u8 tof_index;
 extern u16 tof_value;            //tof测得的距离
 extern unsigned short DuoCenter; ////舵机中间值 120HZ
 extern unsigned short dianjispeed;
@@ -31,6 +32,7 @@ extern u32 rowCnt; //行计数
 extern u8 Buffer1[ROW][COL];
 u8 SampleFlag = 0;
 extern u8 VSYN_Flag;
+extern void TOFProc();
 
 unsigned char flag_1ms = 0;
 u8 TIME1flag_100ms = 0;
@@ -90,8 +92,9 @@ void USART4_IRQHandler(void)
         if (index_bt > 12)
             index_bt = 0;
     } else {
-        for (index_bt = 0; index_bt < 10; index_bt++)
-            data_receive[index_bt] = 0x00;
+
+        /* for (index_bt = 0; index_bt < 10; index_bt++) */
+        /* data_receive[index_bt] = 0x00; //TODO:这一句可否注释掉？ */
         index_bt = 0;
     }
     //EnableInterrupts;		    //开总中断
@@ -103,24 +106,21 @@ void USART3_IRQHandler(void)
     //TODO:利用电脑修改TOF设置，以最高频率发送
     uint8 ch;
     uint8 i;
-    ch = uart_getchar(UART3);
-    if (ch == 0x0A) { // 起始标记，开始保存接收的数据
-        for (tof_index = 0; tof_index < 5; tof_index++) {
-            tof_receive[tof_index] = 0x00; //先清空记录接收数据的数组
+    /* ch = uart_getchar(UART3); */
+    uart_pendchar(UART3, &ch);
+    tof_receive[tof_index++] = ch; //接收一个数据
+    if (tof_receive[0] == '\n')    //标识头
+    {
+        if (ch == 'm') {
+            TOFProc();
+            tof_index = 0;
+            tof_num_flag = 1;
         }
-        tof_index = 0;      //下标归位
-        tof_num_flag = 1;   //表示接下来的数据是数字，保存
-    } else if ((ch == 'm') && (tof_num_flag == 1)) { //结束标记
-        tof_num_flag = 0;   //表示接下来的数据是字母和换行符，丢弃
-        tof_value = 0;
-        for (i = 0; i < tof_index; i++) { //将数组中的值转换为数字并保存到对应变量
-            tof_value *= 10;  
-            tof_value += tof_receive[i] - '0';
-        }
+        if (tof_index >= sizeof(tof_receive))
+            tof_index = 0;
+    } else {
+        /* memset(tof_receive, 0, 16 * sizeof(tof_receive[0])); TODO：这一句可否注释掉？ */
         tof_index = 0;
-    } else if (tof_num_flag) { //保存接收的数据到数组
-        tof_receive[tof_index] = ch;
-        tof_index++;
     }
 }
 

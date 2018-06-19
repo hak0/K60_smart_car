@@ -61,6 +61,7 @@ u8 VSYN_Flag = 0; //完成一场标识位  0为未完成；1为完成
 u8 time;
 u8 ensend; //允许发送
 u8 enpwm;
+u8 entof;
 u8 speedmodi; //速度修改标志
 
 u8 DuoDir; //转向时方向
@@ -69,6 +70,7 @@ u8 workmode;
 // 光源位置
 u16 light_x;
 u16 light_y;
+u8 see_light;
 
 //s16 row_middle[rowNum];
 s16 row_mid;    //中线值
@@ -87,6 +89,9 @@ s16 g_MotorPWM[2] = { 0, 0 }; // 左右电机PWM值
 u8 g_MotorBrake[2];           // 左右电机刹车信号
 s16 speed[2] = { 0, 0 };      // 左右电机设置速度值
 
+char tof_receive[32];
+u8 tof_num_flag = 0;
+u8 tof_index = 0;
 u16 tof_value = 0; //tof测得的距离值
 
 extern u8 TIME1flag_100ms, flag_1ms;
@@ -109,6 +114,7 @@ void update_pwm();
 void CountThreshole(void);
 void datatrans();
 void PID();
+void TOFProc();
 //-----------------主函数--------------------
 void main()
 {
@@ -117,7 +123,8 @@ void main()
     DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
     DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1;                 //0 舵机调模式  >0 正常工作模式
-    ensend = 1;
+    ensend = 0;
+    entof = 1;
     servPram = servPram1;
     dPram = dPram1;
     row_mid = 150;
@@ -133,11 +140,10 @@ void main()
     UART_Init();          //-----UART初始化，用于初始化串口
     pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 1ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
-    /* oled_init();  //oled初始化 */
     Image_Init(); //----图像数组初始化
     EnableInterrupts;
     uart_irq_EN(UART4);
-    uart_irq_EN(UART3);
+    /* uart_irq_EN(UART3); */
     uart_putchar(UART4, 'S');
     uart_putchar(UART4, 't');
     uart_putchar(UART4, 'a');
@@ -148,7 +154,6 @@ void main()
 
     rowCnt = 0;
     while (1) {
-        update_pwm();       //更新输出到驱动板的pwm值
         if (VSYN_Flag == 1) //完成一幅图像采集
         {
             DisableInterrupts;
@@ -156,24 +161,36 @@ void main()
             VSYN_Flag = 0;
             EnableInterrupts;
         }
+        TOFProc(); //TOF数据采集
+        if (entof == 1) {
+            uart_putchar(UART4, tof_value / 1000 + '0');     //tof data
+            uart_putchar(UART4, tof_value / 100 % 10 + '0'); //tof_data
+            uart_putchar(UART4, tof_value / 10 % 10 + '0');  //tof_data
+            uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
+            uart_putchar(UART4, '\n');                       //tof_data
+        }
+        if (tof_value <= 180)
+            turn_off_light();
+        update_pwm(); //更新输出到驱动板的pwm值
     }
 }
 
 void GPIO_Init()
 {
-    gpio_init(PORTB, 16, GPI_UP_PF, 1);        //初始化PTB16为电平输入，上拉，接受编码器方向
-    gpio_init(PORTB, 17, GPO, encoder_select); //初始化PTB17为电平输出，，选择当前检测的编码器
-    gpio_init(PORTA, 17, GPO, 1);              //初始化PTE0为高电平输出---LED0
-    gpio_set(PORTA, 17, 1);                    //设置PTE0为高电平输出，LED0灭
-    gpio_init(PORTE, 7, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
-    PORT_PCR_REG(PORTE_BASE_PTR, 7) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
-    gpio_init(PORTE, 8, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
-    PORT_PCR_REG(PORTE_BASE_PTR, 8) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
-    gpio_init(PORTE, 9, GPO, 0);               //初始化PTB17为电平输出，，选择当前检测的编码器
-    PORT_PCR_REG(PORTE_BASE_PTR, 9) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
-    gpio_init(PORTE, 10, GPO, 0);              //初始化PTB17为电平输出，，选择当前检测的编码器
-    PORT_PCR_REG(PORTE_BASE_PTR, 10) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK ;      //开弱下拉
-                                               //如果之后初始化成功，会点亮灯。
+    gpio_init(PORTB, 16, GPI_UP_PF, 1);                                       //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTB, 17, GPO, encoder_select);                                //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTA, 17, GPO, 1);                                             //初始化PTE0为高电平输出---LED0
+    gpio_set(PORTA, 17, 1);                                                   //设置PTE0为高电平输出，LED0灭
+    gpio_init(PORTE, 7, GPO, 0);                                              //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 7) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK;  //开弱下拉
+    gpio_init(PORTE, 8, GPO, 0);                                              //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 8) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK;  //开弱下拉
+    gpio_init(PORTE, 9, GPO, 0);                                              //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 9) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK;  //开弱下拉
+    gpio_init(PORTE, 10, GPO, 0);                                             //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTE, 11, GPO, 0);                                             //初始化PTB17为电平输出，，选择当前检测的编码器
+    PORT_PCR_REG(PORTE_BASE_PTR, 10) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK; //开弱下拉
+                                                                              //如果之后初始化成功，会点亮灯。
 }
 
 void PWM_Init()
@@ -261,10 +278,7 @@ void get_light_position()
     }
     light_x = xsum / cnt;
     light_y = ysum / cnt;
-    if (cnt == 0) {
-        light_x = cmoscol / 2;
-        light_y = cmosrow / 2;
-    }
+    see_light = (cnt > 0) ? 1 : 0;
 }
 
 void ImageProc()
@@ -289,9 +303,12 @@ void ImageProc()
                     uart_putchar(UART4, send_buffer);
                     send_buffer = 0;
                 }
-                //uart_putchar(UART4,cmos[i][j]);  //发送二值化后数据
             }
         }
+        uart_putchar(UART4, see_light);
+        uart_putchar(UART4, light_x >> 8);
+        uart_putchar(UART4, light_x & 0xFF);
+        uart_putchar(UART4, light_y & 0xFF);
     }
 }
 
@@ -299,7 +316,7 @@ extern u8 tof_num_flag;
 void run()
 {
     TimeCount++;
-    if (TimeCount % 20 == 0) //20ms读一次速度值
+    if (TimeCount % 20 == 0) //2ms读一次速度值
     {
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
         //encoder_dir = !encoder_dir; //如果前进后退的方向相反，就认为取反
@@ -311,17 +328,9 @@ void run()
         gpio_set(PORTB, 17, encoder_select);                                 //编码器选通位电平输出,切换到另一侧编码器
         FTM1_CNT = 0;                                                        //编码器计数变量重置
     }
-    if (TimeCount % 40 == 0)
-    {
+    if (TimeCount % 4 == 0) {
         //每读取一次左右编码器的速度值就利用PID更新一次PWM
-        PID();
-        if (0 == 1){
-          uart_putchar(UART4, tof_value/1000); //tof data
-          uart_putchar(UART4, tof_value/100%10); //tof_data
-          uart_putchar(UART4, tof_value/10%10); //tof_data
-          uart_putchar(UART4, tof_value%10); //tof_data
-          uart_putchar(UART4, '\n'); //tof_data
-        }
+        /* PID(); */
     }
     if (TimeCount >= 1000)
         TimeCount = 0; //每1s清零计数变量
@@ -359,37 +368,68 @@ void turn_off_light()
     /* 伸出挡板，挡光 */
     DuoCenter = servMotorFar;
     FTM_PWM_Duty(FTM2, CH1, DuoCenter);
+    gpio_set(PORTE, 11, 1);                                                   //物理刹车
     /* 软件延时500ms,此时除了中断什么都不会做 */
-    delay();
+    delayms(200);
     /* 收回挡板 */
+    gpio_set(PORTE, 11, 0);                                                   //收回物理刹车
+    delayms(400);
     DuoCenter = servMotorNear;
     FTM_PWM_Duty(FTM2, CH1, DuoCenter);
 }
 
 void PID()
 {
+#if 0
     /*--------------------------------------------------------------*/
-    static double e0[2] = { 0, 0 }, e1[2] = { 0, 0 }, e2[2] = { 0, 0 }, y0[2] = { 0, 0 }, y1[2] = { 0, 0 }, y2[2] = { 0, 0 };
-    const double Ki = 1; //选择比例积分调节器
-    const double Kd = 0;
-    const double Kp = 0.75;  //比例系数
-    const double Ti = 0.001; //积分时间常数
-    const double Td = 0.00;  //微分时间常数
-    const double T = 0.001;  //采样时间
-    const double a0 = Kp * (1.0 + Ki * T / Ti + Kd * Td / T);
-    const double a1 = Kp * (1.0 + 2.0 * Kd * Td / T);
-    const double a2 = Kp * Kd * Td / T;
+    /* 实际上是PI,没用到微分 */
+    static double e0[2] = { 0, 0 }, e1[2] = { 0, 0 }, y0[2] = { 0, 0 }, y1[2] = { 0, 0 };
+    const u16 duty = 1;
+    const double Ki = 1;    //选择比例积分调节器
+    const double Kp = 0.25; //比例系数
+    const double a0 = Kp * (1.0 + Ki);
+    const double a1 = Kp;
     for (u8 side = left; side <= right; side++) {
-        y2[side] = y1[side];
         y1[side] = y0[side];
         y0[side] = g_nMotorPulse[side];
         e0[side] = speed[side] - y0[side];
         e1[side] = speed[side] - y1[side];
-        e2[side] = speed[side] - y2[side];
-        g_MotorPWM[side] = (a0 * e0[side] - a1 * e1[side] + a2 * e2[side]); //PID控制器的算法
-                                                                            // 可能需要设置最小值和最大值
-    if (g_MotorPWM[side] >= 10000) g_MotorPWM[side] = 10000;
-    if (g_MotorPWM[side] <= -10000) g_MotorPWM[side] = -10000;
+        g_MotorPWM[side] += (a0 * e0[side] - a1 * e1[side]) * duty; //PI控制器的算法
+                                                                   // 可能需要设置最小值和最大值
+        if (g_MotorPWM[side] >= 8000)
+            g_MotorPWM[side] = 8000;
+        if (g_MotorPWM[side] <= -8000)
+            g_MotorPWM[side] = -8000;
     }
+#else
+    for (u8 side = left; side <= right; side++) {
+        if (g_nMotorPulse[side] < speed[side])
+            g_MotorPWM[side] += 100;
+        if (g_nMotorPulse[side] > speed[side])
+            g_MotorPWM[side] -= 100;
+        // 可能需要设置最小值和最大值
+        if (g_MotorPWM[side] >= 8000)
+            g_MotorPWM[side] = 8000;
+        if (g_MotorPWM[side] <= -8000)
+            g_MotorPWM[side] = -8000;
+    }
+#endif
+}
+
+void TOFProc()
+{
+    u8 i = 0;
+    tof_value = 0;
+    for (i = 0; i < 16; i++) {
+        uart_pendchar(UART3, tof_receive + i);
+    }
+    while (tof_receive[i++] != '\n')
+        ;                           //移动到起始标记\n后
+    while (tof_receive[i] != 'm') { //处理数字段
+        tof_value *= 10;
+        tof_value += tof_receive[i] - '0';
+        i++;
+    }
+    tof_num_flag = 1;
 }
 
