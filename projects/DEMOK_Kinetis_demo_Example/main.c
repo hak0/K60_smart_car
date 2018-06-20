@@ -16,9 +16,9 @@
 #define servMotorFar 550 //1030 //1070 //1050 //1840
 //舵机右极限，很关键，限s幅防止舵机打死
 
-#define cmosrow 150
-#define cmoscol 280    //该值必须是8的整数倍 35*8 //实际处理数据分辨率 280*150
-#define comscolbyte 35 // =cmoscol/8
+#define cmosrow 64
+#define cmoscol 120    //该值必须是8的整数倍 35*8 //实际处理数据分辨率 280*150
+#define comscolbyte 15 // =cmoscol/8
 #define duty_max 10000
 
 //定义方向
@@ -130,7 +130,7 @@ void main()
     DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
     DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
     workmode = 1;                 //0 舵机调模式  >0 正常工作模式
-    ensend = 0;
+    ensend = 1;
     entof = 0;
     servPram = servPram1;
     dPram = dPram1;
@@ -236,18 +236,19 @@ void datatrans() //buffer1 的 50~100行
 {
     uint16 m, n;
     uint8 colour[2] = { 0, 240 }; //0 和 1 分别对应的颜色
+    int offset = 9;
     for (m = 0; m < cmosrow; m++) //150行
     {
         for (n = 0; n < comscolbyte; n++) // 35*8 = 280列
         {
-            cmos[m][8 * n] = colour[(Buffer1[m][n + 1] >> 7) & 0x01];
-            cmos[m][8 * n + 1] = colour[(Buffer1[m][n + 1] >> 6) & 0x01];
-            cmos[m][8 * n + 2] = colour[(Buffer1[m][n + 1] >> 5) & 0x01];
-            cmos[m][8 * n + 3] = colour[(Buffer1[m][n + 1] >> 4) & 0x01];
-            cmos[m][8 * n + 4] = colour[(Buffer1[m][n + 1] >> 3) & 0x01];
-            cmos[m][8 * n + 5] = colour[(Buffer1[m][n + 1] >> 2) & 0x01];
-            cmos[m][8 * n + 6] = colour[(Buffer1[m][n + 1] >> 1) & 0x01];
-            cmos[m][8 * n + 7] = colour[(Buffer1[m][n + 1] >> 0) & 0x01];
+            cmos[m][(8 * n - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 7) & 0x01];
+            cmos[m][(8 * n + 1 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 6) & 0x01];
+            cmos[m][(8 * n + 2 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 5) & 0x01];
+            cmos[m][(8 * n + 3 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 4) & 0x01];
+            cmos[m][(8 * n + 4 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 3) & 0x01];
+            cmos[m][(8 * n + 5 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 2) & 0x01];
+            cmos[m][(8 * n + 6 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 1) & 0x01];
+            cmos[m][(8 * n + 7 - offset) % cmoscol] = colour[(Buffer1[m][n + 1] >> 0) & 0x01];
         }
     }
 }
@@ -459,13 +460,13 @@ void TOFProc()
 
 void decide_speed()
 {
-    const u16 light_x_middle = 140;
-    const u16 pwm_max = 4000;
-    const u16 pwm_near = 1000;
+    const u16 light_x_middle = 80;
+    const u16 pwm_max = 3000;
+    const u16 pwm_near = 1500;
     const u16 pwm_min = 500;
-    const u16 pwm_rotate[2] = { 4000, 2000 };
+    const u16 pwm_rotate[2] = { 3000, 1000 };
     /* const u16 tof_value_threshold = 800; */
-    const u16 tof_value_threshold = 50;
+    const u16 tof_value_threshold = 400;
     //三种情况
     //1. 摄像头未捕获，TOF无反馈 -> 打转一段时间后寻光
     //2. 摄像头未捕获，TOF反馈 -> 直行，根据TOF调速
@@ -499,13 +500,13 @@ void decide_speed()
     }
     if (see_light) {
         // 向光源移动，速度随光源远近调整
-        g_MotorPWM[left] = (pwm_max - pwm_near) * (143 - light_y) / 143 + pwm_near;
-        g_MotorPWM[right] = (pwm_max - pwm_near) * (143 - light_y) / 143 + pwm_near;
+        g_MotorPWM[left] = (pwm_max - pwm_near) * (62 - light_y) / 62 + pwm_near;
+        g_MotorPWM[right] = (pwm_max - pwm_near) * (62 - light_y) / 62 + pwm_near;
         // 转向
-        if (light_x <= light_x_middle - 10) {
-            g_MotorPWM[left] -= 2000;
-        } else if (light_x >= light_x_middle + 10) {
-            g_MotorPWM[right] -= 2000;
+        if (light_x <= light_x_middle - 3) {
+            g_MotorPWM[left] -= 1000;
+        } else if (light_x >= light_x_middle + 3) {
+            g_MotorPWM[right] -= 1000;
         }
         DuoCenter = servMotorNear; //收回挡板
         //TODO:需要加入TOF避障
