@@ -225,17 +225,17 @@ void PORTE_IRQHandler()
         }
         //-------------DMA初始化通道4，数据源为PTD，每次存在数组ImageBuf[]指针中，PCLK接PTA19触发，每次传输1个字节，每次触发传输300次，上升沿触发
         else {
-            if (rowCnt > 10) {
-                for (lie = 0; lie < delay_time; lie++) //130  延时修改，可以调节图像的左右
-                {
-                    asm("nop");
-                    asm("nop");
-                }
-                DMA_PORTx2BUFF_Init(DMA_CH4, (void*)&PTD_BYTE0_IN, Buffer1[rowCnt - 11], PTA19, DMA_BYTE1, COL, DMA_rising_down);
+            if (rowCnt >= 0) {
+/*                 for (lie = 0; lie < delay_time; lie++) //130  延时修改，可以调节图像的左右 */
+                /* { */
+                    /* asm("nop"); */
+                    /* asm("nop"); */
+                /* } */
+                DMA_PORTx2BUFF_Init(DMA_CH4, (void*)&PTD_BYTE0_IN, Buffer1[rowCnt - 0], PTA19, DMA_BYTE1, COL, DMA_rising_down);
                 DMA_EN(DMA_CH4);
             }
             rowCnt++;
-            if (rowCnt > ROW + 11) {
+            if (rowCnt > ROW + 0) {
                 DisableInterrupts;
                 rowCnt = 0;
                 DMA_DIS(DMA_CH4);

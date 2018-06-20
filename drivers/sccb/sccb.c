@@ -266,10 +266,10 @@ u8 sccb_refresh()
      ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl3,0x00);
      ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl4,0x00);
      
-     ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x50);  //320
-     ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x28);  //160
-     ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x78);  //240 
-     ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x3C);  //120 
+     /* ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x50);  //320 */
+     ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x1E);  //160 -> 120
+     /* ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x78);  //240  */
+     ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x21);  //120 ->66
      
      ack1 = sccb_regWrite(0x42,OV7725_EXHCH,0x00);
      ack1 = sccb_regWrite(0x42,OV7725_GAM1,0x0c);

@@ -8,7 +8,7 @@
 #include "common.h"
 #include "include.h"
 
-#define tof_value_min 300 //最小距离值，再小就触发灭灯
+#define tof_value_min 800 //最小距离值，再小就触发灭灯
 
 #define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
 #define servMotorNear 1160    //730 //770  //1580
@@ -73,6 +73,9 @@ u8 workmode;
 u16 light_x;
 u16 light_y;
 u8 see_light;
+
+// 读取对管
+u8 get_dual_diode();
 
 //s16 row_middle[rowNum];
 s16 row_mid;    //中线值
@@ -175,7 +178,7 @@ void main()
             uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
             uart_putchar(UART4, '\n');                       //tof_data
         }
-        if ((!gpio_get(PORTB, 16) || !gpio_get(PORTB, 17)) || (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1))
+        if (get_dual_diode() || (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1))
             turn_off_light();
         decide_speed(); //根据光源位置状态决定PWM值
         update_pwm();   //更新输出到驱动板的pwm值
@@ -187,6 +190,9 @@ void GPIO_Init()
     gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
     gpio_init(PORTB, 17, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
     gpio_init(PORTE, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
+    //对管
+    gpio_init(PORTE, 2, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
+    gpio_init(PORTE, 3, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
     /* gpio_init(PORTB, 17, GPO, encoder_select);                                //初始化PTB17为电平输出，，选择当前检测的编码器 */
     gpio_init(PORTA, 17, GPO, 1);                                             //初始化PTE0为高电平输出---LED0
     gpio_set(PORTA, 17, 1);                                                   //设置PTE0为高电平输出，LED0灭
@@ -458,20 +464,31 @@ void TOFProc()
     tof_num_flag = 1;
 }
 
+u8 get_dual_diode(){
+    return (!gpio_get(PORTB, 16) || !gpio_get(PORTB, 17) || !gpio_get(PORTE, 2) || !gpio_get(PORTE, 3));
+}
 void decide_speed()
 {
-    const u16 light_x_middle = 80;
-    const u16 pwm_max = 3000;
+    const u16 light_x_middle = 72;
+    const u16 pwm_max = 2500;
     const u16 pwm_near = 1500;
     const u16 pwm_min = 500;
-    const u16 pwm_rotate[2] = { 3000, 1000 };
+    const u16 pwm_rotate[2] = { 4000, 0 };
     /* const u16 tof_value_threshold = 800; */
     const u16 tof_value_threshold = 400;
+
+    DuoCenter = servMotorNear; //默认收回挡板
     //三种情况
     //1. 摄像头未捕获，TOF无反馈 -> 打转一段时间后寻光
     //2. 摄像头未捕获，TOF反馈 -> 直行，根据TOF调速
     //3. 摄像头捕获，TOF无反馈 -> 确定方向，前进
     //4. 摄像头捕获，TOF反馈 -> 避障,向一侧转向,在TOF无反馈的基础上调整
+    //三个环节：
+    //倒车标志的处理，寻光(特殊情况)
+    //整体速度的把握，摄像头优先级高于TOF，有障碍的情况再议
+    //转向如果有摄像头指导，按照摄像头的数据来
+    //
+    //特殊情况
     if (move_back_flag) {
         //倒退1s，不接收反驳
         if ((TimeCount - back_start_time) % 1000 >= 20) {
@@ -483,7 +500,7 @@ void decide_speed()
     }
     if (tof_value >= tof_value_threshold && !see_light) {
         // 打转找光,800ms打转,200ms前进
-        if (TimeCount <= 80) {
+        if (TimeCount <= 800) {
             g_MotorPWM[left] = pwm_rotate[left];
             g_MotorPWM[right] = pwm_rotate[right];
         } else {
@@ -492,25 +509,27 @@ void decide_speed()
         }
         DuoCenter = servMotorNear; //收回挡板
     }
-    if (tof_value < tof_value_threshold && !see_light) {
-        // 接近光源，调整速度
+    // 速度整体把握
+    if (see_light) {
+        /* if (gpio_get(PORTE, 12)) 可以用光敏电阻区分是障碍物还是光源*/
+        //TODO:区分光源与障碍物，避障
+        /* 这里都默认为光源 */
+        // 向光源移动，速度随光源远近调整
+        g_MotorPWM[left] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
+        g_MotorPWM[right] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
+    } else if (tof_value < tof_value_threshold) { //第一优先级：TOF,顺便伸出挡板
         g_MotorPWM[left] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
         g_MotorPWM[right] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
+    }
+    //转向调节
+    if (light_x <= light_x_middle - 3) {
+        g_MotorPWM[left] -= 1200;
+    } else if (light_x >= light_x_middle + 3) {
+        g_MotorPWM[right] -= 1200;
+    }
+    //是否伸出灭灯板
+    if (tof_value <= tof_value_threshold)
         DuoCenter = servMotorFar; //伸出挡板
-    }
-    if (see_light) {
-        // 向光源移动，速度随光源远近调整
-        g_MotorPWM[left] = (pwm_max - pwm_near) * (62 - light_y) / 62 + pwm_near;
-        g_MotorPWM[right] = (pwm_max - pwm_near) * (62 - light_y) / 62 + pwm_near;
-        // 转向
-        if (light_x <= light_x_middle - 3) {
-            g_MotorPWM[left] -= 1000;
-        } else if (light_x >= light_x_middle + 3) {
-            g_MotorPWM[right] -= 1000;
-        }
-        DuoCenter = servMotorNear; //收回挡板
-        //TODO:需要加入TOF避障
-    }
     FTM_PWM_Duty(FTM2, CH1, DuoCenter);
 }
 
