@@ -398,7 +398,7 @@ void turn_off_light()
         if ((TimeCount - brake_start_time) % 1000 >= 20) {
             g_MotorBrake[left] = 0;
             g_MotorBrake[right] = 0;
-            if (!gpio_get(PORTE, 12)) {
+            if (1) {
                 move_back_flag = 1;
                 back_start_time = TimeCount;
             } //如果没有光了，就开始后退
@@ -491,7 +491,7 @@ void decide_speed()
     //特殊情况
     if (move_back_flag) {
         //倒退1s，不接收反驳
-        if ((TimeCount - back_start_time) % 1000 >= 20) {
+        if ((TimeCount - back_start_time) % 1000 >= 200) {
             move_back_flag = 0;
         }
         g_MotorPWM[left] = pwm_max * -0.6;
