@@ -27,6 +27,7 @@ extern u8 enpwm;
 extern u8 speedmodi;
 
 extern void run();
+extern void TOFProc();
 
 extern u32 rowCnt; //行计数
 extern u8 Buffer1[ROW][COL];
@@ -107,8 +108,8 @@ void USART3_IRQHandler(void)
     //TODO:利用电脑修改TOF设置，以最高频率发送
     uint8 ch;
     uint8 i;
-    /* ch = uart_getchar(UART3); */
-    uart_pendchar(UART3, &ch);
+    ch = uart_getchar(UART3);
+    //uart_pendchar(UART3, &ch);
     tof_receive[tof_index++] = ch; //接收一个数据
     if (tof_receive[0] == '\n')    //标识头
     {
@@ -246,6 +247,20 @@ void PORTE_IRQHandler()
     }
 }
 
+/*************************************************************************
+*                            岱默科技DEMOK Kinetis开发小组
+*
+*  函数名称：DMA_CH1_Handler
+*  功能说明：DMA通道1的中断服务函数
+*  参数说明：无
+*  函数返回：无
+*
+*************************************************************************/
+void DMA_CH1_Handler(void)
+{
+    DMA_IRQ_CLEAN(DMA_CH0); //清除通道传输中断标志位    (这样才能再次进入中断)
+    TOFProc();
+}
 /*************************************************************************
 *                            岱默科技DEMOK Kinetis开发小组
 *

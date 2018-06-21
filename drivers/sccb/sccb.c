@@ -245,35 +245,37 @@ u8 sccb_refresh()
 //#else
 //    
 //#endif
-     ack1 = sccb_regWrite(0x42,OV7725_COM4,0x41);  //41
-     ack1 = sccb_regWrite(0x42,OV7725_CLKRC,0x00);
+     ack1 = sccb_regWrite(0x42,OV7725_COM4,0x41);  //41 4倍分频
+     /* ack1 = sccb_regWrite(0x42,OV7725_COM4,0xC1);  //81 8倍分频,噪点严重，放弃 */
+     ack1 = sccb_regWrite(0x42,OV7725_CLKRC,0x00); //摄像头时钟以最高速度运行
      //ack1 = sccb_regWrite(0x42,OV7725_COM2,0x03);
-     ack1 = sccb_regWrite(0x42,OV7725_COM3,0xD0);
-     ack1 = sccb_regWrite(0x42,OV7725_COM5,0x00);
+     ack1 = sccb_regWrite(0x42,OV7725_COM3,0xD0); //水平图像左右颠倒
+     ack1 = sccb_regWrite(0x42,OV7725_COM5,0x00); //不使用夜间模式
      ack1 = sccb_regWrite(0x42,OV7725_COM7,0x40);  //QVGA
      ack1 = sccb_regWrite(0x42,OV7725_COM8,0xC0);  //关闭自动曝光调整
-     ack1 = sccb_regWrite(0x42,OV7725_AECH,0x20);  //曝光调整
+     ack1 = sccb_regWrite(0x42,OV7725_AECH,0x20);  //手动调整曝光参数
      ack1 = sccb_regWrite(0x42,OV7725_AEC,0x20);
-     ack1 = sccb_regWrite(0x42,OV7725_HSTART,0x3F); //0x3f  320  传感器尺寸
+     ack1 = sccb_regWrite(0x42,OV7725_HSTART,0x3F); //0x3f  320  传感器尺寸，以下4个都是QVGA的默认值
      ack1 = sccb_regWrite(0x42,OV7725_HSIZE,0x50);
      ack1 = sccb_regWrite(0x42,OV7725_VSTRT,0x03);  //240
      ack1 = sccb_regWrite(0x42,OV7725_VSIZE,0x78);
-     ack1 = sccb_regWrite(0x42,OV7725_HREF,0x00);
-     ack1 = sccb_regWrite(0x42,OV7725_SCAL0,0x0A);
-     ack1 = sccb_regWrite(0x42,OV7725_AWB_Ctrl0,0xE0);
-     ack1 = sccb_regWrite(0x42,OV7725_DSPAuto,0xff);
-     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl2,0x0C);
-     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl3,0x00);
-     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl4,0x00);
+     ack1 = sccb_regWrite(0x42,OV7725_HREF,0x00); //好像和HREF信号控制有关，默认值
+     ack1 = sccb_regWrite(0x42,OV7725_SCAL0,0x0A); //降采样，采样率为原先的1/4，0XFF就降为1/8
+     /* ack1 = sccb_regWrite(0x42,OV7725_AWB_Ctrl0,0xE0); //白平衡，好像是默认值但修改了reserved的内容，注释了 */
+     ack1 = sccb_regWrite(0x42,OV7725_DSPAuto,0xff);//摄像头内置图像处理相关参数，全是默认值
+     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl2,0x0C);//开启水平和垂直方向的白平衡
+     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl3,0x00);//关闭color bar(好像是用来调试白平衡用的)
+     ack1 = sccb_regWrite(0x42,OV7725_DSP_Ctrl4,0x00);//自动曝光相关控制，反正已经禁用了，全是默认值
      
      /* ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x50);  //320 */
      ack1 = sccb_regWrite(0x42,OV7725_HOutSize,0x1E);  //160 -> 120
      /* ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x78);  //240  */
-     ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x21);  //120 ->66
+     ack1 = sccb_regWrite(0x42,OV7725_VOutSize,0x20);  //120 ->64
      
+     //以下如果没有注释的寄存器全是默认值
      ack1 = sccb_regWrite(0x42,OV7725_EXHCH,0x00);
-     ack1 = sccb_regWrite(0x42,OV7725_GAM1,0x0c);
-     ack1 = sccb_regWrite(0x42,OV7725_GAM2,0x16);
+     ack1 = sccb_regWrite(0x42,OV7725_GAM1,0x0c); //GAM系列寄存器是为了
+     ack1 = sccb_regWrite(0x42,OV7725_GAM2,0x16); //调节gamma曲线
      ack1 = sccb_regWrite(0x42,OV7725_GAM3,0x2a);
      ack1 = sccb_regWrite(0x42,OV7725_GAM4,0x4e);
      ack1 = sccb_regWrite(0x42,OV7725_GAM5,0x61);
@@ -288,17 +290,17 @@ u8 sccb_refresh()
      ack1 = sccb_regWrite(0x42,OV7725_GAM14,0xd7);
      ack1 = sccb_regWrite(0x42,OV7725_GAM15,0xe8);
      ack1 = sccb_regWrite(0x42,OV7725_SLOP,0x20);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_RADI,0x00);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_COEF,0x13);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_XC,0x08);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_COEFB,0x14);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_COEFR,0x17);
-     ack1 = sccb_regWrite(0x42,OV7725_LC_CTR,0x05);
-     ack1 = sccb_regWrite(0x42,OV7725_BDBase,0x99);
-     ack1 = sccb_regWrite(0x42,OV7725_BDMStep,0x03);
-     ack1 = sccb_regWrite(0x42,OV7725_SDE,0x04);
+     ack1 = sccb_regWrite(0x42,OV7725_LC_RADI,0x00);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_LC_COEF,0x13);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_LC_XC,0x08);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_LC_COEFB,0x14);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_LC_COEFR,0x17);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_LC_CTR,0x05);//镜头像差矫正相关
+     ack1 = sccb_regWrite(0x42,OV7725_BDBase,0x99);//带宽滤波相关
+     ack1 = sccb_regWrite(0x42,OV7725_BDMStep,0x03);//带宽滤波相关
+     ack1 = sccb_regWrite(0x42,OV7725_SDE,0x04);//饱和度固定
      ack2 = sccb_regWrite(0x42,OV7725_BRIGHT,0x25);  //值越大，图像越白
-     ack2 = sccb_regWrite(0x42,OV7725_CNST,0xFF); //环境很暗：0xff  环境很亮：0x00
+     ack2 = sccb_regWrite(0x42,OV7725_CNST,0xFF); //环境很暗：0xff  环境很亮：0x00 是硬件二值化的阈值
      ack3 = sccb_regWrite(0x42,OV7725_SIGN,0x06);
      ack3 = sccb_regWrite(0x42,OV7725_UVADJ0,0x11);
      ack3 = sccb_regWrite(0x42,OV7725_UVADJ1,0x02);

@@ -27,7 +27,7 @@
 #include "LQ12864.h"  //自己加的
 
 
-#define ROW 62              //行数
+#define ROW 60              //行数
 #define COL 15              //列数  为消除消隐区
 //#define PicSize  ROW*COL      //图像大小
 #define _UART_BlueTooth_      //若用蓝牙进行通信 去掉注释该语句

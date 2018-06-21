@@ -33,6 +33,9 @@
 #undef  VECTOR_003
 #define VECTOR_003    HardFault_Handler   //发生硬件上访 （就是程序跑飞了）     推荐调试程序时，用个LED显示来指示程序跑飞了
 
+#undef  VECTOR_017
+#define VECTOR_017    DMA_CH1_Handler
+
 #undef  VECTOR_020
 #define VECTOR_020    DMA_CH4_Handler
 
@@ -75,6 +78,7 @@ extern void PIT0_IRQHandler();            //PIT0 定时中断服务函数
 extern void PORTE_IRQHandler();           //PORTE中断服务函数
 extern void FTM0_IRQHandler();            //FTM0输入捕捉中断
 extern void FTM1_IRQHandler();            //FTM1输入捕捉中断
+extern void DMA_CH0_Handler(void);              //DMA通道0的中断服务函数
 extern void DMA_CH4_Handler(void);              //DMA通道4的中断服务函数
 
 

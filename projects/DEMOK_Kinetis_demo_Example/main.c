@@ -16,7 +16,7 @@
 #define servMotorFar 550 //1030 //1070 //1050 //1840
 //舵机右极限，很关键，限s幅防止舵机打死
 
-#define cmosrow 64
+#define cmosrow 60
 #define cmoscol 120    //该值必须是8的整数倍 35*8 //实际处理数据分辨率 280*150
 #define comscolbyte 15 // =cmoscol/8
 #define duty_max 10000
@@ -66,9 +66,6 @@ u8 enpwm;
 u8 entof;
 u8 speedmodi; //速度修改标志
 
-u8 DuoDir; //转向时方向
-u8 workmode;
-
 // 光源位置
 u16 light_x;
 u16 light_y;
@@ -77,9 +74,6 @@ u8 see_light;
 // 读取对管
 u8 get_dual_diode();
 
-//s16 row_middle[rowNum];
-s16 row_mid;    //中线值
-s16 row_midold; //前一次中线值
 //
 u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,
     left_black, right_black, flag1 = 0;
@@ -122,6 +116,7 @@ void turn_off_light();
 void update_pwm();
 void CountThreshole(void);
 void datatrans();
+void tof_dma_init();
 void PID();
 void TOFProc();
 void decide_speed();
@@ -129,31 +124,32 @@ void decide_speed();
 void main()
 {
     u8 sccb_ack;
-    u16 discnt;
-    DuoCenter = servMotorCenture; //  1630;  //   1210  ~   1610
-    DuoDir = 0;                   //如果小车转向和实际要求相反，把该值修改成 1
-    workmode = 1;                 //0 舵机调模式  >0 正常工作模式
+    DuoCenter = servMotorCenture; //舵机位置回到中心
+
+    //debug标志
     ensend = 1;
     entof = 0;
-    servPram = servPram1;
-    dPram = dPram1;
-    row_mid = 150;
+
+    //开始初始化
     DisableInterrupts; //关闭中断开始初始化数据
     /* FTM1_QUAD_Iint();  //正交解码测速  A相---PTA12  B相---PTA13 */
     //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
-
     GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
     sccb_init(); //-----SCCB初始化，用于配置摄像头状态
     sccb_ack = sccb_refresh();
-    PWM_Init();           //-----PWM初始化，用于初始化舵机电机的输出
-    EXTI_Init();          //-----外部中断初始化，用于摄像头中断触发
-    UART_Init();          //-----UART初始化，用于初始化串口
-    pit_init_ms(PIT0, 1); //初始化PIT0，定时时间为： 10ms
+
+    PWM_Init();  //-----PWM初始化，用于初始化舵机和电机的输出
+    EXTI_Init(); //-----外部中断初始化，用于摄像头中断触发
+    UART_Init(); //-----UART初始化，用于初始化串口
+    //TODO:分别检测PIT有无时，PIT和摄像头中断的时间情况（用示波器）
+    pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
     Image_Init(); //----图像数组初始化
     EnableInterrupts;
+    // 初始化结束
+
     uart_irq_EN(UART4);
-    /* uart_irq_EN(UART3); */
+    //uart_irq_EN(UART3);
     uart_putchar(UART4, 'S');
     uart_putchar(UART4, 't');
     uart_putchar(UART4, 'a');
@@ -170,7 +166,8 @@ void main()
             VSYN_Flag = 0;
             EnableInterrupts;
         }
-        TOFProc(); //TOF数据采集
+        //TOFProc(); //TOF数据采集 //TODO:检查TOF采集对摄像头和定时器中断的影响，影响很大，本来7ms变成了400ms
+        tof_value = 1400;
         if (entof == 1) {
             uart_putchar(UART4, tof_value / 1000 + '0');     //tof data
             uart_putchar(UART4, tof_value / 100 % 10 + '0'); //tof_data
@@ -178,6 +175,7 @@ void main()
             uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
             uart_putchar(UART4, '\n');                       //tof_data
         }
+        // TODO：写一个大一统的decide_speed函数，把对管距离之类的都放在里面检测，每两场处理一次
         if (get_dual_diode() || (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1))
             turn_off_light();
         decide_speed(); //根据光源位置状态决定PWM值
@@ -189,7 +187,7 @@ void GPIO_Init()
 {
     gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
     gpio_init(PORTB, 17, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
-    gpio_init(PORTE, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
+    /* gpio_init(PORTE, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻 */
     //对管
     gpio_init(PORTE, 2, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
     gpio_init(PORTE, 3, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
@@ -204,6 +202,7 @@ void GPIO_Init()
     PORT_PCR_REG(PORTE_BASE_PTR, 9) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK;  //开弱下拉
     gpio_init(PORTE, 10, GPO, 0);                                             //初始化PTB17为电平输出，，选择当前检测的编码器
     gpio_init(PORTE, 11, GPO, 0);                                             //初始化PTB17为电平输出，，选择当前检测的编码器
+    gpio_init(PORTE, 12, GPO, 0);                                             //PTE11用于输出计时信号
     PORT_PCR_REG(PORTE_BASE_PTR, 10) |= PORT_PCR_PE_MASK & !PORT_PCR_PS_MASK; //开弱下拉
                                                                               //如果之后初始化成功，会点亮灯。
 }
@@ -224,9 +223,11 @@ void UART_Init()
 
 void EXTI_Init()
 {
+    //TODO:检查是上升沿还是下降沿
     //----初始化外部中断---//
-    exti_init(PORTE, 0, falling_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部下拉
-    exti_init(PORTE, 1, rising_down);  //VSYN----PORTE1 端口外部中断初始化 ，上升沿触发中断，内部下拉
+    /* exti_init(PORTE, 0, rising_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部下拉 */
+    exti_init(PORTE, 0, falling_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部上拉，但上升沿会来不及初始化DMA然后出问题，还是用下降沿吧，这样会丢失一行数据
+    exti_init(PORTE, 1, falling_down); //VSYN----PORTE1 端口外部中断初始化 ，下降沿触发中断，内部下拉
 }
 void Image_Init()
 {
@@ -331,7 +332,8 @@ void ImageProc()
 extern u8 tof_num_flag;
 void run()
 {
-#if 0 //测速相关
+    gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
+#if 0                     //测速相关
     if (TimeCount % 20 == 0) //20ms读一次速度值
     {
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
@@ -448,10 +450,6 @@ void TOFProc()
 {
     u8 i = 0;
     tof_value = 0;
-    for (i = 0; i < 16; i++) {
-        uart_pendchar(UART3, tof_receive + i);
-    }
-    i = 0;
     while (tof_receive[i++] != '\n' && i < sizeof(tof_receive))
         ; //移动到起始标记\n后
     if (i >= sizeof(tof_receive))
@@ -463,16 +461,43 @@ void TOFProc()
     }
     tof_num_flag = 1;
 }
+void tof_dma_init()
+{
+    //dma对应串口UART3的dma配置,dma为CH1
+    /* DMA_PORTx2BUFF_Init(DMA_CH3, (void*)&USART_TX_BUF, tof_receive_buf, )  */
+    //SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
+    DMAMUX_CHCFG1 = (1 << 7) | DMA_UART3_Rx; //启用DMA，触发通道位UART3
+    //SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
+    //DMA_CR = 0;
+    DMA_TCD1_SADDR = (unsigned long)&UART3_D;            //DMA源地址
+    DMA_TCD1_DADDR = (unsigned long)&tof_receive[0]; //DMA目的地址
+    DMA_TCD1_NBYTES_MLNO = 1;
+    DMA_TCD1_ATTR = 0;     //8位传送
+    DMA_TCD1_SOFF = 0;     //每次操作完源地址，源地址不增加
+    DMA_TCD1_DOFF = 1;     //每次操作完目标地址，目标地址增加1
+    DMA_TCD1_SLAST = 0;    //DMA完成一次输出之后即major_loop衰减完之后不更改源地址
+    DMA_TCD1_DLASTSGA = 0; //DMA完成一次输出之后即major_loop衰减完之后不更改目标地址
+    //每次读100个数据然后触发DMA中断
+    DMA_TCD1_CITER_ELINKNO = 16; //计数初始值
+    DMA_TCD1_BITER_ELINKNO = 16; //计数复位值
+    DMA_TCD1_CSR = 0;             //该寄存器清零，做后续配置
+    /* DMA_TCD1_CSR &= ~DMA_CSR_INTMAJOR_MASK; //“当计数到0后，发起DMA中断”功能关闭 */
+    DMA_TCD1_CSR |= DMA_CSR_INTMAJOR_MASK; //“当计数到0后，发起DMA中断”功能开启
+    
+    DMA_TCD1_CSR |= DMA_CSR_DREQ_MASK; //“当计数到0后，自动清除该DMA请求标志”功能启动
+    DMA_ERQ |= (1 << 1); //启动
+}
 
-u8 get_dual_diode(){
+u8 get_dual_diode()
+{
     return (!gpio_get(PORTB, 16) || !gpio_get(PORTB, 17) || !gpio_get(PORTE, 2) || !gpio_get(PORTE, 3));
 }
 void decide_speed()
 {
     const u16 light_x_middle = 72;
-    const u16 pwm_max = 2500;
+    const u16 pwm_max = 3000;
     const u16 pwm_near = 1500;
-    const u16 pwm_min = 500;
+    const u16 pwm_min = 1000;
     const u16 pwm_rotate[2] = { 4000, 0 };
     /* const u16 tof_value_threshold = 800; */
     const u16 tof_value_threshold = 400;
@@ -491,7 +516,7 @@ void decide_speed()
     //特殊情况
     if (move_back_flag) {
         //倒退1s，不接收反驳
-        if ((TimeCount - back_start_time) % 1000 >= 200) {
+        if ((TimeCount - back_start_time) % 1000 >= 20) {
             move_back_flag = 0;
         }
         g_MotorPWM[left] = pwm_max * -0.6;
