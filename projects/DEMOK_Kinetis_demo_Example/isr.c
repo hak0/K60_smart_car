@@ -105,6 +105,7 @@ void USART4_IRQHandler(void)
 
 void USART3_IRQHandler(void)
 {
+#if 0
     //TODO:利用电脑修改TOF设置，以最高频率发送
     uint8 ch;
     uint8 i;
@@ -124,6 +125,9 @@ void USART3_IRQHandler(void)
         /* memset(tof_receive, 0, 16 * sizeof(tof_receive[0])); TODO：这一句可否注释掉？ */
         tof_index = 0;
     }
+#else
+
+#endif
 }
 
 /*************************************************************************
@@ -258,7 +262,9 @@ void PORTE_IRQHandler()
 *************************************************************************/
 void DMA_CH1_Handler(void)
 {
-    DMA_IRQ_CLEAN(DMA_CH0); //清除通道传输中断标志位    (这样才能再次进入中断)
+    DMA_IRQ_CLEAN(DMA_CH1); //清除通道传输中断标志位    (这样才能再次进入中断)
+    DMA_TCD1_DADDR = (unsigned long)&tof_receive[0]; //重新设置DMA目的地址
+    DMA_ERQ |= (1 << 1);               //启动
     TOFProc();
 }
 /*************************************************************************
