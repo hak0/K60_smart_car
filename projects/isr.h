@@ -28,7 +28,7 @@
 #else
 #define VECTOR_014    PendSV_Handler
 #define VECTOR_015    SysTick_Handler   //滴答定时器  OS用得到
-#endif
+#endif;
 
 #undef  VECTOR_003
 #define VECTOR_003    HardFault_Handler   //发生硬件上访 （就是程序跑飞了）     推荐调试程序时，用个LED显示来指示程序跑飞了
@@ -39,8 +39,8 @@
 #undef  VECTOR_020
 #define VECTOR_020    DMA_CH4_Handler
 
-#undef  VECTOR_067                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
-#define VECTOR_067    USART3_IRQHandler   //重新定义67号中断的ISR：UART3：Single interrupt vector for UART status sources
+// #undef  VECTOR_067                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
+// #define VECTOR_067    USART3_IRQHandler   //重新定义67号中断的ISR：UART3：Single interrupt vector for UART status sources
 
 #undef  VECTOR_069                        //要先取消了，因为在vectors.h里默认是定义为 default_isr  
 #define VECTOR_069    USART4_IRQHandler   //重新定义69号中断的ISR：UART4：Single interrupt vector for UART status sources
@@ -70,7 +70,7 @@
 extern void PendSV_Handler(void);         //可悬起的系统调用中断服务函数
 extern void HardFault_Handler(void);      //发生硬件上访（程序跑飞）
 extern void SysTick_Handler(void);        //滴答时钟(os 用到)
-extern void USART3_IRQHandler();          //串口3 中断接收函数
+// extern void USART3_IRQHandler();          //串口3 中断接收函数
 extern void USART4_IRQHandler();          //串口4 中断接收函数
 extern void PIT0_IRQHandler();            //PIT0 定时中断服务函数
 //extern void PORTA_IRQHandler();           //PORTA中断服务函数

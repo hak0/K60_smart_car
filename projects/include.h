@@ -15,7 +15,7 @@
 #include  "delay.h"      //IO口操作
 #include  "dma.h"
 #include  "uart.h"      //串口
-#include  "adc.h"       //ADC模块
+#include  "ADC.h"       //ADC模块
 #include  "FTM.h"       //FTM模块（FTM0：电机控制 / 通用 /PWM     FTM1、2：正交解码 / 通用 /PWM ）
 #include  "PIT.h"       //周期中断计时器
 #include  "lptmr.h"     //低功耗定时器(延时)

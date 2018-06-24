@@ -80,15 +80,15 @@ typedef enum ADC_nbit
 
 
 //外部函数接口声明
-extern void     adc_init  (ADCn, ADC_Ch);              //AD初始化
-extern u16      ad_once   (ADCn, ADC_Ch, ADC_nbit);    //采集一次一路模拟量的AD值
+void     adc_init  (ADCn, ADC_Ch);              //AD初始化
+u16      ad_once   (ADCn, ADC_Ch, ADC_nbit);    //采集一次一路模拟量的AD值
 
-extern u16      ad_mid    (ADCn, ADC_Ch, ADC_nbit);    //中值滤波后的结果
-extern u16      ad_ave    (ADCn, ADC_Ch, ADC_nbit, u8 N); //均值滤波后的结果
-extern u16      ad_flt    (ADCn, ADC_Ch, ADC_nbit);    //与前几次采样均值滤波   速度快于ad_ave很多，如果相邻采样时间比较短，则采样精确于 ad_once。即采样间距较短的情况下优先考虑使用这个
+u16      ad_mid    (ADCn, ADC_Ch, ADC_nbit);    //中值滤波后的结果
+u16      ad_ave    (ADCn, ADC_Ch, ADC_nbit, u8 N); //均值滤波后的结果
+u16      ad_flt    (ADCn, ADC_Ch, ADC_nbit);    //与前几次采样均值滤波   速度快于ad_ave很多，如果相邻采样时间比较短，则采样精确于 ad_once。即采样间距较短的情况下优先考虑使用这个
 
-extern void     adc_start (ADCn, ADC_Ch, ADC_nbit);    //开始adc转换
-extern void     adc_stop  (ADCn);                      //停止ADC转换
+void     adc_start (ADCn, ADC_Ch, ADC_nbit);    //开始adc转换
+void     adc_stop  (ADCn);                      //停止ADC转换
 
 
 //内部函数声明

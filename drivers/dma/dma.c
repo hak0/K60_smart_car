@@ -237,4 +237,74 @@ void DMA_count_reset(DMA_CHn CHn)
     DMA_CITER_ELINKNO(CHn) = count_init[CHn] ;
 }
 
+/********************************************************************************
+**Routine: myDMA_Config
+**Description: DMA配置函数
+               DMA_CHn——指定的DMA通道号，范围0~15；
+               DMAMUX_Source——DMA触发源，在DMA.h文件里有枚举定义
+               S_Addr——DMA传送源地址
+               D_Addr——DMA传送目的地址
+               Block_Size——一次DMA传输的数据块大小（/byte）
+**Notes: 默认情况下，固定优先级模式，每个有通道分配的优先级等于该通道的通道号，
+        所以通道号小的优先级低。（本例程默认优先级配置）
+********************************************************************************/
+void myDMA_Config(uint8 DMA_CHn, uint8 DMAMUX_Source, uint32 S_Addr, uint32 D_Addr, uint16 Block_Size)
+{
+    /* the corresponding SIM clock gate to be enabled befor the DMAMUX module 
+     register being initialized */
+    SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
+    /* Config DMAMUX for channel n */
+    DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR, DMA_CHn) = (0
+        | DMAMUX_CHCFG_ENBL_MASK /* 使能DMA通道 */
+        //| DMAMUX_CHCFG_TRIG_MASK              /* 打开周期性触发模式，注意只有0~3通道支持 */
+        | DMAMUX_CHCFG_SOURCE(DMAMUX_Source) /* 指定DMA触发源 */
+    );
+
+    /* enable the DMA clock gate in SIM */
+    SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;            /* DMA时钟门控上电默认是打开的，所以这步可加可不加 */
+    DMA_CR = 0;                                 /* 默认配置，需要在DMA被激活之前配置此寄存器 */
+                                                //DMA_DCHPRIn                                                 /* 默认优先级配置，这里不另更改 */
+    DMA_BASE_PTR->TCD[DMA_CHn].SADDR = S_Addr;  /* 分配DMA源地址 */
+    DMA_BASE_PTR->TCD[DMA_CHn].DADDR = D_Addr;  /* 分配DMA目标地址 */
+    DMA_BASE_PTR->TCD[DMA_CHn].NBYTES_MLNO = 1; /* 每次minor loop传送1个字节 */
+    DMA_BASE_PTR->TCD[DMA_CHn].ATTR = (0
+        | DMA_ATTR_SMOD(0)  /* Source modulo feature disabled */
+        | DMA_ATTR_SSIZE(0) /* Source size, 8位传送 */
+        | DMA_ATTR_DMOD(0)  /* Destination modulo feature disabled */
+        | DMA_ATTR_DSIZE(0) /* Destination size, 8位传送 */
+    );
+    DMA_BASE_PTR->TCD[DMA_CHn].SOFF = 0x0000;                                       /* 每次操作完源地址，源地址不增加 */
+    DMA_BASE_PTR->TCD[DMA_CHn].DOFF = 0x0001;                                       /* 每次操作完目标地址，目标地址增加1  */
+    DMA_BASE_PTR->TCD[DMA_CHn].SLAST = 0x00;                                        /* DMA完成一次输出之后即major_loop衰减完之后不更改源地址 */
+    DMA_BASE_PTR->TCD[DMA_CHn].DLAST_SGA = -Block_Size;                             /* DMA完成一次输出之后即major_loop衰减完之后更改目标地址,回到起始处 */
+    DMA_BASE_PTR->TCD[DMA_CHn].CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(Block_Size); /* 1个major loop, 即一次传输量=major_loop*minor_loop，最大为2^15=32767 */
+    DMA_BASE_PTR->TCD[DMA_CHn].BITER_ELINKNO = DMA_CITER_ELINKNO_CITER(Block_Size); /* BITER应该等于CITER */
+
+    DMA_BASE_PTR->TCD[DMA_CHn].CSR = 0;                      /* 先清零CSR，之后再设置 */
+    DMA_INT |= (1 << DMA_CHn);                               /* 开启DMA相应通道的传输完成中断，与TCD_CSR_INTMAJOR或者TCD_CSR_INTHALF搭配 */
+    DMA_BASE_PTR->TCD[DMA_CHn].CSR |= DMA_CSR_INTMAJOR_MASK; /* 开启DMA major_loop完成中断 */
+    DMA_BASE_PTR->TCD[DMA_CHn].CSR &= ~DMA_CSR_DREQ_MASK;    /* major_loop递减为0时不要自动关闭DMA，即一直进行DMA传输 */
+
+    /* DMA_ERQ寄存器很重要，置位相应的位即开启DMA工作 */
+    DMA_ERQ &= ~(1 << DMA_CHn); /* 关闭相应通道的DMA请求，在配置阶段先关闭，再调用myDMA_Start函数开启DMA */
+}
+/********************************************************************************
+**Routine: myDMA_Start
+**Description: 开启DMA请求，使能DMA工作
+**Notes: 无
+********************************************************************************/
+void myDMA_Start(uint8 DMA_CHn)
+{
+    DMA_ERQ |= (1 << DMA_CHn); /* 开启相应通道的DMA */
+}
+/********************************************************************************
+**Routine: myDMA_Close
+**Description: 关闭相应通道的DMA请求，停止DMA工作
+**Notes: 
+********************************************************************************/
+void myDMA_Close(uint8 DMA_CHn)
+{
+    DMA_ERQ &= ~(1 << DMA_CHn); /* 停止相应通道的DMA */
+}
+
 

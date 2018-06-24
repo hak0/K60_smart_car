@@ -8,7 +8,7 @@
 #include "common.h"
 #include "include.h"
 
-#define tof_value_min 800 //最小距离值，再小就触发灭灯
+#define tof_value_min 0 //最小距离值，再小就触发灭灯
 
 #define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
 #define servMotorNear 1160    //730 //770  //1580
@@ -71,9 +71,6 @@ u16 light_x;
 u16 light_y;
 u8 see_light;
 
-// 读取对管
-u8 get_dual_diode();
-
 //
 u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,
     left_black, right_black, flag1 = 0;
@@ -88,9 +85,7 @@ s16 g_MotorPWM[2] = { 0, 0 }; // 左右电机PWM值
 u8 g_MotorBrake[2];           // 左右电机刹车信号
 s16 speed[2] = { 0, 0 };      // 左右电机设置速度值
 
-char tof_receive[32];
-u8 tof_num_flag = 0;
-u8 tof_index = 0;
+char tof_receive[16];
 u16 tof_value = 0; //tof测得的距离值
 
 extern u8 TIME1flag_100ms, flag_1ms;
@@ -120,9 +115,11 @@ void tof_dma_init();
 void PID();
 void TOFProc();
 void decide_speed();
-void myDMA_Config(uint8 DMA_CHn, uint8 DMAMUX_Source, uint32 S_Addr, uint32 D_Addr, uint16 Block_Size);
+void get_distance();
 void myDMA_Start(uint8 DMA_CHn);
 void myDMA_Close(uint8 DMA_CHn);
+u16 voltage[3];
+u16 distance[3];
 //-----------------主函数--------------------
 void main()
 {
@@ -130,7 +127,7 @@ void main()
     DuoCenter = servMotorCenture; //舵机位置回到中心
 
     //debug标志
-    ensend = 0;
+    ensend = 1;
     entof = 0;
 
     //开始初始化
@@ -145,19 +142,15 @@ void main()
     EXTI_Init(); //-----外部中断初始化，用于摄像头中断触发
     UART_Init(); //-----UART初始化，用于初始化串口
     //TODO:分别检测PIT有无时，PIT和摄像头中断的时间情况（用示波器）
-    pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
+    /* pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms */
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
-    Image_Init();   //----图像数组初始化
+    Image_Init(); //----图像数组初始化
+    ADC_Init(ADC0);                                        //初始化AD接口，ADC0
     EnableInterrupts;
     // 初始化结束
 
     uart_irq_EN(UART4);
-    /* tof_dma_init(); //----TOF 串口DMA初始化 */
-    UART3_C2 |= UART_C2_RIE_MASK;      /* 使能UART发送中断或者DMA请求 */
-    UART3_C5 |= UART_C5_RDMAS_MASK;    /* 打开UART发送的DMA请求 */
-    myDMA_Config(1, DMA_UART3_Rx, (u32)&UART3_D, (u32)tof_receive, 32);
-    myDMA_Start(1);
-    /* uart_irq_EN(UART3); */
+    tof_dma_init(); //----TOF 串口DMA初始化
     uart_putchar(UART4, 'S');
     uart_putchar(UART4, 't');
     uart_putchar(UART4, 'a');
@@ -168,27 +161,27 @@ void main()
 
     rowCnt = 0;
     while (1) {
-        uart_putchar(UART4, tof_value & 0xFF);
-        int s1 = uart_query(UART3);
+        get_distance();
         if (VSYN_Flag == 1) //完成一幅图像采集
         {
             ImageProc();
             VSYN_Flag = 0;
+            if (entof == 1) {
+                uart_putchar(UART4, tof_value / 1000 + '0');     //tof data
+                uart_putchar(UART4, tof_value / 100 % 10 + '0'); //tof_data
+                uart_putchar(UART4, tof_value / 10 % 10 + '0');  //tof_data
+                uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
+                uart_putchar(UART4, '\n');                       //tof_data
+            }
+            decide_speed();       //根据光源位置状态决定PWM值
+            update_pwm();         //更新输出到驱动板的pwm值
+            gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
+            TimeCount += 7;       //TODO:需要按照实际测量确定
             EnableInterrupts;
         }
-        //TOFProc(); //TOF数据采集 //TODO:检查TOF采集对摄像头和定时器中断的影响，影响很大，本来7ms变成了400ms
-        if (entof == 1) {
-            uart_putchar(UART4, tof_value / 1000 + '0');     //tof data
-            uart_putchar(UART4, tof_value / 100 % 10 + '0'); //tof_data
-            uart_putchar(UART4, tof_value / 10 % 10 + '0');  //tof_data
-            uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
-            uart_putchar(UART4, '\n');                       //tof_data
-        }
+
         // TODO：写一个大一统的decide_speed函数，把对管距离之类的都放在里面检测，每两场处理一次
-        if (get_dual_diode() || (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1))
-            turn_off_light();
-        decide_speed(); //根据光源位置状态决定PWM值
-        update_pwm();   //更新输出到驱动板的pwm值
+        // TODO:用位处理，MEMCPY传输数据
     }
 }
 
@@ -269,24 +262,6 @@ void datatrans() //buffer1 的 50~100行
     }
 }
 
-void CountThreshold(void) //找出黑点最大和白点最小的两个数，计算i行的阈值，就第0行用到了
-{
-    u16 i, j;
-    unsigned char max1, min1;
-    for (i = 30; i < 70; i++) {
-        max1 = cmos[i][0];
-        min1 = cmos[i][0];
-        for (j = 1; j < 299; j++) //BLACKMAX==16,WHITEMAX==160
-        {
-            if ((cmos[i][j] < 250) && (cmos[i][j] > max1))
-                max1 = cmos[i][j];
-            if ((cmos[i][j] > 20) && (cmos[i][j] < min1))
-                min1 = cmos[i][j];
-        }
-        Threshold[i] = (max1 + min1) / 2 + 10;
-    }
-}
-
 void get_light_position()
 {
     u32 xsum = 0, ysum = 0;
@@ -338,11 +313,24 @@ void ImageProc()
     }
 }
 
-extern u8 tof_num_flag;
+void get_distance()
+{
+    int i;
+    //AD转换
+    voltage[0] = ADC_Ave(ADC0, ADC0_SE8, ADC_12bit, 20);  //读取AD0数据
+    voltage[1] = ADC_Ave(ADC0, ADC0_SE9, ADC_12bit, 20);  //读取AD1数据
+    voltage[2] = ADC_Ave(ADC0, ADC0_SE12, ADC_12bit, 20); //读取AD2数据
+    for (i = 0; i<sizeof(voltage); i++){
+        if (voltage[i] < 400) voltage[i] = 400;
+        if (voltage[i] > 4000) voltage[i] = 4000;
+    }
+    distance[0] = 1/((voltage[0]-400)/4000.0*0.1);
+    distance[1] = 1/((voltage[1]-400)/3000.0*0.067);
+    distance[2] = 1/((voltage[2]-400)/4000.0*0.1);
+}
 void run()
 {
-    gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
-#if 0                     //测速相关
+#if 0 //测速相关
     if (TimeCount % 20 == 0) //20ms读一次速度值
     {
         encoder_dir = gpio_get(PORTB, 16) ^ encoder_select; //编码器左右两个方向相反，和选通位异或后就变得相同
@@ -455,6 +443,15 @@ void PID()
 #endif
 }
 
+void tof_dma_init()
+{
+    UART3_C2 |= UART_C2_RIE_MASK;   /* 使能UART发送中断或者DMA请求 */
+    UART3_C5 |= UART_C5_RDMAS_MASK; /* 打开UART发送的DMA请求 */
+    myDMA_Config(1, DMA_UART3_Rx, (u32)&UART3_D, (u32)tof_receive, 14);
+    myDMA_Start(1);
+    DMA_IRQ_EN(DMA_CH1);
+}
+
 void TOFProc()
 {
     u8 i = 0;
@@ -468,123 +465,20 @@ void TOFProc()
         tof_value += tof_receive[i] - '0';
         i++;
     }
-    tof_num_flag = 1;
 }
 
-/********************************************************************************
-**Routine: myDMA_Config
-**Description: DMA配置函数
-               DMA_CHn——指定的DMA通道号，范围0~15；
-               DMAMUX_Source——DMA触发源，在DMA.h文件里有枚举定义
-               S_Addr——DMA传送源地址
-               D_Addr——DMA传送目的地址
-               Block_Size——一次DMA传输的数据块大小（/byte）
-**Notes: 默认情况下，固定优先级模式，每个有通道分配的优先级等于该通道的通道号，
-        所以通道号小的优先级低。（本例程默认优先级配置）
-********************************************************************************/
-void myDMA_Config(uint8 DMA_CHn, uint8 DMAMUX_Source, uint32 S_Addr, uint32 D_Addr, uint16 Block_Size)
-{  
-  /* the corresponding SIM clock gate to be enabled befor the DMAMUX module 
-     register being initialized */
-  SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
-  /* Config DMAMUX for channel n */
-  DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR, DMA_CHn) = (0
-                                                | DMAMUX_CHCFG_ENBL_MASK              /* 使能DMA通道 */
-                                                //| DMAMUX_CHCFG_TRIG_MASK              /* 打开周期性触发模式，注意只有0~3通道支持 */
-                                                | DMAMUX_CHCFG_SOURCE(DMAMUX_Source)  /* 指定DMA触发源 */
-                                               );
-    
-  /* enable the DMA clock gate in SIM */ 
-  SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;                            /* DMA时钟门控上电默认是打开的，所以这步可加可不加 */
-  DMA_CR = 0;                                                 /* 默认配置，需要在DMA被激活之前配置此寄存器 */
-//DMA_DCHPRIn                                                 /* 默认优先级配置，这里不另更改 */
-  DMA_BASE_PTR->TCD[DMA_CHn].SADDR = S_Addr;                  /* 分配DMA源地址 */
-  DMA_BASE_PTR->TCD[DMA_CHn].DADDR = D_Addr;                  /* 分配DMA目标地址 */
-  DMA_BASE_PTR->TCD[DMA_CHn].NBYTES_MLNO = 1;                 /* 每次minor loop传送1个字节 */
-  DMA_BASE_PTR->TCD[DMA_CHn].ATTR  =(0 
-                                     |DMA_ATTR_SMOD(0)        /* Source modulo feature disabled */
-                                     | DMA_ATTR_SSIZE(0)      /* Source size, 8位传送 */
-                                     | DMA_ATTR_DMOD(0)       /* Destination modulo feature disabled */
-                                     | DMA_ATTR_DSIZE(0)      /* Destination size, 8位传送 */
-                                    );
-  DMA_BASE_PTR->TCD[DMA_CHn].SOFF  = 0x0000;                  /* 每次操作完源地址，源地址不增加 */
-  DMA_BASE_PTR->TCD[DMA_CHn].DOFF  = 0x0001;                  /* 每次操作完目标地址，目标地址增加1  */
-  DMA_BASE_PTR->TCD[DMA_CHn].SLAST = 0x00;                    /* DMA完成一次输出之后即major_loop衰减完之后不更改源地址 */
-  DMA_BASE_PTR->TCD[DMA_CHn].DLAST_SGA = 0x00;                /* DMA完成一次输出之后即major_loop衰减完之后不更改目标地址 */
-  DMA_BASE_PTR->TCD[DMA_CHn].CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(Block_Size); /* 1个major loop, 即一次传输量=major_loop*minor_loop，最大为2^15=32767 */
-  DMA_BASE_PTR->TCD[DMA_CHn].BITER_ELINKNO = DMA_CITER_ELINKNO_CITER(Block_Size); /* BITER应该等于CITER */
-  
-  DMA_BASE_PTR->TCD[DMA_CHn].CSR = 0;                         /* 先清零CSR，之后再设置 */
-  DMA_INT |=(1<<DMA_CHn);                                    /* 开启DMA相应通道的传输完成中断，与TCD_CSR_INTMAJOR或者TCD_CSR_INTHALF搭配 */
-  DMA_BASE_PTR->TCD[DMA_CHn].CSR |= DMA_CSR_INTMAJOR_MASK;   /* 开启DMA major_loop完成中断 */
-  DMA_BASE_PTR->TCD[DMA_CHn].CSR |= DMA_CSR_DREQ_MASK;        /* major_loop递减为0时自动关闭DMA，即只进行一次DMA传输 */
-  
-  /* DMA_ERQ寄存器很重要，置位相应的位即开启DMA工作 */
-  DMA_ERQ &= ~(1 << DMA_CHn);                                 /* 关闭相应通道的DMA请求，在配置阶段先关闭，再调用myDMA_Start函数开启DMA */
-}
-/********************************************************************************
-**Routine: myDMA_Start
-**Description: 开启DMA请求，使能DMA工作
-**Notes: 无
-********************************************************************************/
-void myDMA_Start(uint8 DMA_CHn)
-{
-  DMA_ERQ |= (1 << DMA_CHn);                                  /* 开启相应通道的DMA */
-}
-/********************************************************************************
-**Routine: myDMA_Close
-**Description: 关闭相应通道的DMA请求，停止DMA工作
-**Notes: 
-********************************************************************************/
-void myDMA_Close(uint8 DMA_CHn)
-{
-  DMA_ERQ &= ~(1 << DMA_CHn);                                 /* 停止相应通道的DMA */
-}
-
-void tof_dma_init()
-{
-    //dma对应串口UART3的dma配置,dma为CH1
-    UART3_C5 |= UART_C5_RDMAS_MASK; //允许UART3收中断产生DMA请求
-    /* UART3_C1 = 1 << 7; //使用回环模式 */
-    UART3_C2 |= UART_C2_RIE_MASK; //DMA请求发送使能
-    UART3_C2 |= UART_C2_RIE_MASK; //DMA请求发送使能
-    SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
-    SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
-    DMAMUX_CHCFG1 = (1 << 7) | DMA_UART3_Rx; //启用DMA，触发通道位UART3
-    DMA_CR = 0;
-    DMA_TCD1_SADDR = (unsigned long)&UART3_D; //DMA源地址为uart3的D寄存器
-
-    DMA_TCD1_DADDR = (unsigned long)&tof_receive[0]; //DMA目的地址
-    DMA_TCD1_NBYTES_MLNO = 1;
-    DMA_TCD1_ATTR = 0;     //8位传送
-    DMA_TCD1_SOFF = 0;     //每次操作完源地址，源地址不增加
-    DMA_TCD1_DOFF = 1;     //每次操作完目标地址，目标地址增加1
-    DMA_TCD1_SLAST = 0;    //DMA完成一次输出之后即major_loop衰减完之后不更改源地址
-    DMA_TCD1_DLASTSGA = 0; //DMA完成一次输出之后即major_loop衰减完之后不更改目标地址
-    //每次读16个数据然后触发DMA中断
-    DMA_TCD1_CITER_ELINKNO = 16; //计数初始值
-    DMA_TCD1_BITER_ELINKNO = 16; //计数复位值
-    DMA_TCD1_CSR = 0;            //该寄存器清零，做后续配置
-    DMA_TCD1_CSR &= ~DMA_CSR_INTMAJOR_MASK; //“当计数到0后，发起DMA中断”功能关闭
-    /* DMA_TCD1_CSR |= DMA_CSR_INTMAJOR_MASK; //“当计数到0后，发起DMA中断”功能开启 */
-
-    DMA_TCD1_CSR |= DMA_CSR_DREQ_MASK; //“当计数到0后，自动清除该DMA请求标志”功能启动
-    DMA_ERQ |= (1 << 1);               //启动
-}
-
-u8 get_dual_diode()
-{
-    return (!gpio_get(PORTB, 16) || !gpio_get(PORTB, 17) || !gpio_get(PORTE, 2) || !gpio_get(PORTE, 3));
-}
 void decide_speed()
 {
     const u16 light_x_middle = 72;
-    const u16 pwm_max = 3000;
-    const u16 pwm_near = 1500;
-    const u16 pwm_min = 1000;
+    const u16 pwm_max = 4000;
+    const u16 pwm_near = 2000;
+    const u16 pwm_min = 1500;
     const u16 pwm_rotate[2] = { 4000, 0 };
     /* const u16 tof_value_threshold = 800; */
     const u16 tof_value_threshold = 400;
+
+    if ((g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1) || tof_value < 160)
+        turn_off_light();
 
     DuoCenter = servMotorNear; //默认收回挡板
     //三种情况

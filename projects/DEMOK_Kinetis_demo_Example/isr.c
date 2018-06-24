@@ -103,33 +103,6 @@ void USART4_IRQHandler(void)
     //uart_putchar(UART0,'A');
 }
 
-void USART3_IRQHandler(void)
-{
-#if 0
-    //TODO:利用电脑修改TOF设置，以最高频率发送
-    uint8 ch;
-    uint8 i;
-    ch = uart_getchar(UART3);
-    //uart_pendchar(UART3, &ch);
-    tof_receive[tof_index++] = ch; //接收一个数据
-    if (tof_receive[0] == '\n')    //标识头
-    {
-        if (ch == 'm') {
-            TOFProc();
-            tof_index = 0;
-            tof_num_flag = 1;
-        }
-        if (tof_index >= sizeof(tof_receive))
-            tof_index = 0;
-    } else {
-        /* memset(tof_receive, 0, 16 * sizeof(tof_receive[0])); TODO：这一句可否注释掉？ */
-        tof_index = 0;
-    }
-#else
-
-#endif
-}
-
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
 *
@@ -263,8 +236,6 @@ void PORTE_IRQHandler()
 void DMA_CH1_Handler(void)
 {
     DMA_IRQ_CLEAN(DMA_CH1); //清除通道传输中断标志位    (这样才能再次进入中断)
-    DMA_TCD1_DADDR = (unsigned long)&tof_receive[0]; //重新设置DMA目的地址
-    DMA_ERQ |= (1 << 1);               //启动
     TOFProc();
 }
 /*************************************************************************
