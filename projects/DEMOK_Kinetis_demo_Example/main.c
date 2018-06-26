@@ -8,6 +8,9 @@
 #include "common.h"
 #include "include.h"
 
+#define CPU_F ((double)8000000)
+#define DELAY_US(x) __delay_cycles((long)(CPU_F * (double)x / 1000000.0))
+
 #define tof_value_min 0 //最小距离值，再小就触发灭灯
 
 #define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
@@ -85,7 +88,7 @@ s16 g_MotorPWM[2] = { 0, 0 }; // 左右电机PWM值
 u8 g_MotorBrake[2];           // 左右电机刹车信号
 s16 speed[2] = { 0, 0 };      // 左右电机设置速度值
 
-char tof_receive[16];
+char uart_dma_recv[4];
 u16 tof_value = 0; //tof测得的距离值
 
 extern u8 TIME1flag_100ms, flag_1ms;
@@ -99,6 +102,13 @@ u32 brake_start_time = 0;
 u32 back_start_time = 0;
 u8 move_back_flag = 0;
 
+u8 CCD[128]; //CCD AD亮度值
+u8 ccd_max_light;
+u16 ccd_light_average;
+u16 ccd_light_width;
+u16 ccd_light_centre;
+u8 ccd_light_threshorld = 15;
+
 //-----------------函数声明------------------
 void ImageProc();
 void GPIO_Init();
@@ -111,13 +121,16 @@ void turn_off_light();
 void update_pwm();
 void CountThreshole(void);
 void datatrans();
-void tof_dma_init();
+void uart_dma_init();
 void PID();
-void TOFProc();
+void DMAProc();
 void decide_speed();
 void get_distance();
 void myDMA_Start(uint8 DMA_CHn);
 void myDMA_Close(uint8 DMA_CHn);
+void ccd_init();
+void ccd_gather();
+void ccd_proc();
 u16 voltage[3];
 u16 distance[3];
 //-----------------主函数--------------------
@@ -144,13 +157,14 @@ void main()
     //TODO:分别检测PIT有无时，PIT和摄像头中断的时间情况（用示波器）
     /* pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms */
     //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
-    Image_Init(); //----图像数组初始化
-    ADC_Init(ADC0);                                        //初始化AD接口，ADC0
+    Image_Init();   //----图像数组初始化
+    ADC_Init(ADC0); //初始化AD接口，ADC0
+    ccd_init();
     EnableInterrupts;
     // 初始化结束
 
     uart_irq_EN(UART4);
-    tof_dma_init(); //----TOF 串口DMA初始化
+    uart_dma_init(); //----TOF 串口DMA初始化
     uart_putchar(UART4, 'S');
     uart_putchar(UART4, 't');
     uart_putchar(UART4, 'a');
@@ -175,9 +189,13 @@ void main()
             }
             decide_speed();       //根据光源位置状态决定PWM值
             update_pwm();         //更新输出到驱动板的pwm值
-            gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
             TimeCount += 7;       //TODO:需要按照实际测量确定
             EnableInterrupts;
+        } else {
+            ccd_init();
+            ccd_gather();
+            ccd_proc();
+            gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
         }
 
         // TODO：写一个大一统的decide_speed函数，把对管距离之类的都放在里面检测，每两场处理一次
@@ -320,13 +338,15 @@ void get_distance()
     voltage[0] = ADC_Ave(ADC0, ADC0_SE8, ADC_12bit, 20);  //读取AD0数据
     voltage[1] = ADC_Ave(ADC0, ADC0_SE9, ADC_12bit, 20);  //读取AD1数据
     voltage[2] = ADC_Ave(ADC0, ADC0_SE12, ADC_12bit, 20); //读取AD2数据
-    for (i = 0; i<sizeof(voltage); i++){
-        if (voltage[i] < 400) voltage[i] = 400;
-        if (voltage[i] > 4000) voltage[i] = 4000;
+    for (i = 0; i < sizeof(voltage); i++) {
+        if (voltage[i] < 400)
+            voltage[i] = 400;
+        if (voltage[i] > 4000)
+            voltage[i] = 4000;
     }
-    distance[0] = 1/((voltage[0]-400)/4000.0*0.1);
-    distance[1] = 1/((voltage[1]-400)/3000.0*0.067);
-    distance[2] = 1/((voltage[2]-400)/4000.0*0.1);
+    distance[0] = 1 / ((voltage[0] - 400) / 4000.0 * 0.1);
+    distance[1] = 1 / ((voltage[1] - 400) / 3000.0 * 0.067);
+    distance[2] = 1 / ((voltage[2] - 400) / 4000.0 * 0.1);
 }
 void run()
 {
@@ -443,26 +463,118 @@ void PID()
 #endif
 }
 
-void tof_dma_init()
+void uart_dma_init()
 {
     UART3_C2 |= UART_C2_RIE_MASK;   /* 使能UART发送中断或者DMA请求 */
     UART3_C5 |= UART_C5_RDMAS_MASK; /* 打开UART发送的DMA请求 */
-    myDMA_Config(1, DMA_UART3_Rx, (u32)&UART3_D, (u32)tof_receive, 14);
+    myDMA_Config(1, DMA_UART3_Rx, (u32)&UART3_D, (u32)uart_dma_recv, 4);
     myDMA_Start(1);
     DMA_IRQ_EN(DMA_CH1);
 }
 
-void TOFProc()
+void Dly_us()
+{
+    for (u16 i = 0; i < 180; i++)
+        asm("nop");
+}
+
+void ccd_init()
+{
+    int i;
+    //     初始化引脚
+    // CLK PTE2
+    // SI  PTE3
+    // AO  AD9
+    gpio_init(PORTE, 2, GPO, 0);
+    gpio_init(PORTE, 3, GPO, 0);
+    ADC_Init(ADC0);        // AO   所在的AD通道的管脚号
+                           //   曝光部分
+    gpio_set(PORTE, 3, 1); //SI = 1
+    gpio_set(PORTE, 2, 1); //CLK = 1
+    Dly_us();
+    gpio_set(PORTE, 3, 0); //SI = 0
+    gpio_set(PORTE, 2, 0); //CLK = 0
+    Dly_us();
+    for (i = 0; i < 256; i++) {
+        gpio_turn(PORTE, 2); //产生128个CLK时钟,曝光时序
+        Dly_us();
+    }
+    DELAY_MS(10); //设置曝光时间  5ms ,可以自行更改，达到最好的效果
+}
+
+void ccd_gather()
+{
+    //  128个像素点采集程序
+    // CLK PTE2
+    // SI  PTE3
+    // AO  AD9
+    u8 index = 0, i = 0;
+    gpio_set(PORTE, 3, 1); //SI = 1
+    gpio_set(PORTE, 2, 1); //CLK = 1
+    Dly_us();
+    gpio_set(PORTE, 3, 0); //SI = 0
+    for (i = 0; i < 8; i++)
+        Dly_us();
+    gpio_set(PORTE, 2, 0); //CLK = 0
+    Dly_us();
+
+    CCD[index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 5);
+    for (i = 0; i < 254; i++) // i<254,是之前已经采集了一个像素点，这里只需采集127个
+    {
+        gpio_turn(PORTE, 2); //产生128个CLK时钟
+        Dly_us();
+        if ((i % 2) == 1) //  此时CLK = 1，为高电平
+        {
+            CCD[++index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 5);
+        }
+    }
+    gpio_set(PORTE, 2, 1); // 产生最后一个CLK时钟
+    Dly_us();
+    gpio_set(PORTE, 2, 0); // 产生最后一个CLK时钟
+    Dly_us();
+}
+void ccd_proc()
+{
+    u8 i;
+    u16 sum;
+    ccd_max_light = 0;
+    ccd_light_width = 0;
+    ccd_light_centre = 0;
+    ccd_light_average = 0;
+    for (i = 0; i < 128; i++){
+        ccd_light_average += CCD[i];
+        if (CCD[i] > ccd_light_threshorld){
+            ccd_light_centre += i;
+            ccd_light_width ++;
+        }
+        if (CCD[i] > ccd_max_light) ccd_max_light = CCD[i];
+    }
+    if (ccd_light_width < 2){
+        ccd_light_width = 0;
+        ccd_light_centre = 75;
+    }
+    else {
+        ccd_light_centre /= ccd_light_width;
+    }
+    ccd_light_average /= 128;
+    ccd_light_average &= 0xFF;
+    ccd_light_width &= 0xFF;
+    ccd_light_centre = 128 - ccd_light_centre;
+    ccd_max_light /= 8;
+    ccd_max_light &= 0xFF;
+}
+
+void DMAProc()
 {
     u8 i = 0;
     tof_value = 0;
-    while (tof_receive[i++] != '\n' && i < sizeof(tof_receive))
+    while (uart_dma_recv[i++] != '\n' && i < sizeof(uart_dma_recv))
         ; //移动到起始标记\n后
-    if (i >= sizeof(tof_receive))
-        return;                                                //如果没有找到，退出
-    while (tof_receive[i] != 'm' && i < sizeof(tof_receive)) { //处理数字段
+    if (i >= sizeof(uart_dma_recv))
+        return;                                                    //如果没有找到，退出
+    while (uart_dma_recv[i] != 'm' && i < sizeof(uart_dma_recv)) { //处理数字段
         tof_value *= 10;
-        tof_value += tof_receive[i] - '0';
+        tof_value += uart_dma_recv[i] - '0';
         i++;
     }
 }

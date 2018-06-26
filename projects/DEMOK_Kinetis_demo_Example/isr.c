@@ -33,7 +33,7 @@ extern u32 rowCnt; //行计数
 extern u8 Buffer1[ROW][COL];
 u8 SampleFlag = 0;
 extern u8 VSYN_Flag;
-extern void TOFProc();
+extern void DMAProc();
 
 extern s32 TimeCount;        //计时
 unsigned char flag_1ms = 0;
@@ -236,7 +236,7 @@ void PORTE_IRQHandler()
 void DMA_CH1_Handler(void)
 {
     DMA_IRQ_CLEAN(DMA_CH1); //清除通道传输中断标志位    (这样才能再次进入中断)
-    TOFProc();
+    DMAProc();
 }
 /*************************************************************************
 *                            岱默科技DEMOK Kinetis开发小组

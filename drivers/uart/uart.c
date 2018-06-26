@@ -258,7 +258,7 @@ char uart_pendstr (UARTn uartn, char *str)
 void uart_putchar (UARTn uartn, char ch)
 {
     //等待发送缓冲区空
-    while(!(UART_S1_REG(UARTx[uartn]) & UART_S1_TDRE_MASK));
+      while(!(UART_S1_REG(UARTx[uartn]) & UART_S1_TDRE_MASK));
     //发送数据
     UART_D_REG(UARTx[uartn]) = (u8)ch;
 }
