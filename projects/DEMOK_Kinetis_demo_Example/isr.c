@@ -36,6 +36,7 @@ extern u8 VSYN_Flag;
 extern void DMAProc();
 
 extern s32 TimeCount;        //计时
+const extern s32 TimeCount_Max;
 unsigned char flag_1ms = 0;
 u8 TIME1flag_100ms = 0;
 /*************************************************************************
@@ -117,8 +118,10 @@ void PIT0_IRQHandler(void) //1ms
 {
     // LED_turn(LED1);             //LED1反转
     PIT_Flag_Clear(PIT0); //清中断标志位
-    TimeCount++;
-    run();                //测速函数
+    TimeCount+=10;
+    if (TimeCount >= TimeCount_Max)
+        TimeCount -= TimeCount_Max; //最大定时时间1000s
+    /* run();                //测速函数 */
 }
 #else
 void PIT0_IRQHandler(void)
