@@ -75,18 +75,20 @@ u8 ccd_max_light;
 u16 ccd_light_average;
 u16 ccd_light_width;
 u16 ccd_light_centre;
-u8 ccd_light_threshorld = 0x0F;
+u8 ccd_light_threshorld = 0x0C;
 u16 ccd_exposuretime = 14;
 u8 ccd_upload_flag = 0;
 
 u16 distance[3] = { 0 };
 u16 voltage[3] = { 0 };
 u8 near_flag = 0;
-u8 near_distance_range = 30;
+u8 near_distance_range = 50;
 
-u16 pwm_max = 1000;
-u16 pwm_near = 1000;
-u16 pwm_min = 1000;
+u16 pwm_max = 6000;
+u16 pwm_near = 1500;
+u16 pwm_min = 1300;
+u16 pwm_back = 2000;
+u16 pwm_rotate[2] = { 1300, 0 };
 
 //-----------------函数声明------------------
 void image_erode(unsigned char (*t)[cmoscol], unsigned char (*temp)[cmoscol], unsigned char b);
@@ -120,7 +122,7 @@ void main()
     //debug标志
     ensend = 0;
     entof = 0;
-    enccd = 1;
+    enccd = 0;
 
     //开始初始化
     DisableInterrupts; //关闭中断开始初始化数据
@@ -132,7 +134,7 @@ void main()
     ADC_Init(ADC0);        //初始化AD接口，ADC0，用于线阵CCD和红外测距
     EnableInterrupts;
     // 初始化结束
-    gpio_set(PORTA, 17, 1); //初始化，LED点亮
+    gpio_set(PORTC, 18, 1); //初始化，LED点亮
 
     uart_irq_EN(UART4);
     uart_dma_init(); //----TOF 串口DMA初始化
@@ -548,7 +550,6 @@ void DMAProc()
 void decide_speed()
 {
     u16 light_x_middle = 72;
-    const u16 pwm_rotate[2] = { 1200, 0 };
     const u16 distance_threshold = 400;
     u8 ccd_light_middle = 64; //CCD光源在正前方方向时的横坐标
 
@@ -558,12 +559,14 @@ void decide_speed()
     g_MotorPWM[right] = pwm_rotate[1];
     // 寻光
     // CMOS优先
+    double speed_up_rate = (30 > ccd_light_width) ? (30 - ccd_light_width)/30.0 : 0;
+    u16 pwm_temp = speed_up_rate * (pwm_max-pwm_near) + pwm_near;
     if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
-        g_MotorPWM[left] = ccd_light_centre * 1.0 / (128) * pwm_near;
-        g_MotorPWM[right] = pwm_near - g_MotorPWM[left];
+        g_MotorPWM[left] = pwm_temp * (1.0 - (128 - ccd_light_centre) * 0.14 / 128);
+        g_MotorPWM[right] = pwm_temp * (1.0 - (ccd_light_centre) * 0.14 / 128);
     }
     // 如果距离接近，停车50ms后进入灭灯模式
-    if (distance[1] <= near_distance_range) {
+    if (distance[0] <= near_distance_range-10 || distance[1] <= near_distance_range || distance[2] <= near_distance_range-10) {
         if (!near_flag) { //如果第一次进入灭灯模式，先停车200ms
             g_MotorBrake[left] = 1;
             g_MotorBrake[right] = 1;
@@ -578,30 +581,34 @@ void decide_speed()
     // 灭灯模式下的动作
     if (near_flag) {
         servValue = servMotorFar;   //伸出挡板
+        if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
+            g_MotorPWM[left] = ccd_light_centre * 1.0 / (128) * pwm_min;
+            g_MotorPWM[right] = pwm_min - g_MotorPWM[left];
+        }
         /* g_MotorPWM[left] = pwm_min; //以最低速前进 */
         /* g_MotorPWM[right] = pwm_min; */
         /*         if (ccd_light_centre <= ccd_light_middle - 5) */
         /* g_MotorPWM[left] = -g_MotorPWM[left] / 3; */
         /* if (ccd_light_centre >= ccd_light_middle + 5) */
         /* g_MotorPWM[right] = -g_MotorPWM[right] / 3; */
-        if (ccd_light_width <= 2) //已经灭灯
+        if (ccd_light_width <= 4) //已经灭灯
         {
             //如果刹车，先把刹车退了
             g_MotorBrake[left] = 0;
             g_MotorBrake[right] = 0;
-            //倒车1s
+            //倒车0.3s
             back_start_time = TimeCount;
             near_flag = 0;
             move_back_flag = 1;
-            g_MotorPWM[left] = -0.5 * pwm_near;
-            g_MotorPWM[right] = -0.5 * pwm_near;
+            g_MotorPWM[left] = pwm_back;
+            g_MotorPWM[right] = pwm_back;
         }
     }
     // 倒车，持续时间都是1s
     if (move_back_flag) {
         g_MotorPWM[left] = -pwm_near;
         g_MotorPWM[right] = -pwm_near;
-        if ((TimeCount - back_start_time) % TimeCount_Max > 1000) {
+        if ((TimeCount - back_start_time) % TimeCount_Max > 300) {
             //已经倒车1s，需要回到正常状态
             move_back_flag = 0;
         }

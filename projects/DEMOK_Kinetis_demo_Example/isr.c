@@ -118,10 +118,10 @@ void PIT0_IRQHandler(void) //1ms
             ccd_gather();
             ccd_proc();
             ccd_init();
+            gpio_turn(PORTE, 12);
         }
         if (enccd && TimeCount % 50 == 0) {
             ccd_upload_flag = 1;
-            gpio_turn(PORTE, 12);
         }
     }
 }
