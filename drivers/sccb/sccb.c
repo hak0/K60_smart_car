@@ -7,6 +7,7 @@
 //////////////////////////////////////////
 #include "sccb.h"
 #include "gpio.h"
+extern u8 cmos_cnst, cmos_bright;
 
 
 
@@ -299,8 +300,8 @@ u8 sccb_refresh()
      ack1 = sccb_regWrite(0x42,OV7725_BDBase,0x99);//带宽滤波相关
      ack1 = sccb_regWrite(0x42,OV7725_BDMStep,0x03);//带宽滤波相关
      ack1 = sccb_regWrite(0x42,OV7725_SDE,0x04);//饱和度固定
-     ack2 = sccb_regWrite(0x42,OV7725_BRIGHT,0x20);  //值越大，图像越白
-     ack2 = sccb_regWrite(0x42,OV7725_CNST,0xFF); //环境很暗：0xff  环境很亮：0x00 是硬件二值化的阈值
+     ack2 = sccb_regWrite(0x42,OV7725_BRIGHT,cmos_bright);  //值越大，图像越白
+     ack2 = sccb_regWrite(0x42,OV7725_CNST,cmos_cnst); //环境很暗：0xff  环境很亮：0x00 是硬件二值化的阈值
      ack3 = sccb_regWrite(0x42,OV7725_SIGN,0x06);
      ack3 = sccb_regWrite(0x42,OV7725_UVADJ0,0x11);
      ack3 = sccb_regWrite(0x42,OV7725_UVADJ1,0x02);

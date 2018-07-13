@@ -17,13 +17,15 @@ extern char tof_receive[32];
 extern u8 tof_num_flag;
 extern u8 tof_index;
 extern u16 tof_value;            //tof测得的距离
-extern unsigned short DuoCenter; ////舵机中间值 120HZ
+extern unsigned short servValue; ////舵机中间值 120HZ
 extern unsigned short dianjispeed;
 extern u8 ensend; //允许发送
 
-extern u16 servPram;
-extern u16 dPram;
 extern u8 enpwm;
+extern u8 enccd;
+extern u8 CCD[128];
+extern u8 ccd_upload_flag;
+static inline void ccd_upload();
 extern u8 speedmodi;
 
 extern void run();
@@ -35,7 +37,7 @@ u8 SampleFlag = 0;
 extern u8 VSYN_Flag;
 extern void DMAProc();
 
-extern s32 TimeCount;        //计时
+extern s32 TimeCount; //计时
 const extern s32 TimeCount_Max;
 unsigned char flag_1ms = 0;
 u8 TIME1flag_100ms = 0;
@@ -61,8 +63,8 @@ void USART4_IRQHandler(void)
         if (ch == '$') {
             if (data_receive[1] == 'D') //舵机中值
             {
-                DuoCenter = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
-                FTM_PWM_Duty(FTM2, CH1, DuoCenter);
+                servValue = (data_receive[2] - 48) * 1000 + (data_receive[3] - 48) * 100 + (data_receive[4] - 48) * 10 + (data_receive[5] - 48);
+                FTM_PWM_Duty(FTM2, CH1, servValue);
             }
             if (data_receive[1] == 'Y') // 允许摄像头上传
             {
@@ -79,14 +81,6 @@ void USART4_IRQHandler(void)
             if (data_receive[1] == 'Z') // 禁止PWM值上传
             {
                 enpwm = 0;
-            }
-            if (data_receive[1] == 'P') //舵机比例系数
-            {
-                servPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
-            }
-            if (data_receive[1] == 'F') //舵机微分系数
-            {
-                dPram = (data_receive[2] - 48) * 100 + (data_receive[3] - 48) * 10 + (data_receive[4] - 48);
             }
             for (index_bt = 0; index_bt < 10; index_bt++)
                 data_receive[index_bt] = 0x00;
@@ -113,22 +107,24 @@ void USART4_IRQHandler(void)
 *  函数返回：无
 *
 *************************************************************************/
-#if 1
 void PIT0_IRQHandler(void) //1ms
 {
-    // LED_turn(LED1);             //LED1反转
     PIT_Flag_Clear(PIT0); //清中断标志位
-    TimeCount+=10;
+    TimeCount += 10;
     if (TimeCount >= TimeCount_Max)
         TimeCount -= TimeCount_Max; //最大定时时间1000s
-    /* run();                //测速函数 */
+    if (!ccd_upload_flag) {
+        if (TimeCount % 20 == 0){
+            ccd_gather();
+            ccd_proc();
+            ccd_init();
+        }
+        if (enccd && TimeCount % 50 == 0) {
+            ccd_upload_flag = 1;
+            gpio_turn(PORTE, 12);
+        }
+    }
 }
-#else
-void PIT0_IRQHandler(void)
-{
-    PIT_Flag_Clear(PIT0); //清中断标志位
-}
-#endif
 
 /*************************************************************************
 *                             岱默科技DEMOK Kinetis开发小组
@@ -207,10 +203,10 @@ void PORTE_IRQHandler()
         //-------------DMA初始化通道4，数据源为PTD，每次存在数组ImageBuf[]指针中，PCLK接PTA19触发，每次传输1个字节，每次触发传输300次，上升沿触发
         else {
             if (rowCnt >= 0) {
-/*                 for (lie = 0; lie < delay_time; lie++) //130  延时修改，可以调节图像的左右 */
+                /*                 for (lie = 0; lie < delay_time; lie++) //130  延时修改，可以调节图像的左右 */
                 /* { */
-                    /* asm("nop"); */
-                    /* asm("nop"); */
+                /* asm("nop"); */
+                /* asm("nop"); */
                 /* } */
                 DMA_PORTx2BUFF_Init(DMA_CH4, (void*)&PTD_BYTE0_IN, Buffer1[rowCnt - 0], PTA19, DMA_BYTE1, COL, DMA_rising_down);
                 DMA_EN(DMA_CH4);

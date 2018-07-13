@@ -8,16 +8,13 @@
 #include "common.h"
 #include "include.h"
 
-#define CPU_F ((double)8000000)
-#define DELAY_US(x) __delay_cycles((long)(CPU_F * (double)x / 1000000.0))
-
 #define tof_value_min 0 //最小距离值，再小就触发灭灯
 
-#define servMotorCenture 1160 //880 //920 //960 //1710     //舵机中心位置
-#define servMotorNear 1160    //730 //770  //1580
-//舵机左极限，很关键，限幅防止舵机打死
+#define servMotorNear 1160 //730 //770  //1580
+//灭灯舵机最近极限
 #define servMotorFar 550 //1030 //1070 //1050 //1840
-//舵机右极限，很关键，限s幅防止舵机打死
+//灭灯舵机最远极限
+u16 servValue = servMotorNear; //舵机位置
 
 #define cmosrow 60
 #define cmoscol 120    //该值必须是8的整数倍 35*8 //实际处理数据分辨率 280*150
@@ -31,33 +28,20 @@
 #define back 2
 //这样，描述方向可以用front|left这种格式
 
-u16 servPram; //舵机转角比例系数 放大10倍
-u16 dPram;    //舵机转角积分系数  放大100倍
-
-u16 servPram1 = 12; //22;//22;     //直线时 舵机转角比例系数 放大10倍
-u16 dPram1 = 16;    //12;//12;        //直线时  舵机转角积分系数  放大100倍
-
-u16 servPram2 = 14; //22;//22;     //小弯时 舵机转角比例系数 放大10倍
-u16 dPram2 = 13;    //12;//12;        //小弯时  舵机转角积分系数  放大100倍
-
-u16 servPram3 = 19; //22;//22;     //大弯时 舵机转角比例系数 放大10倍
-u16 dPram3 = 10;    //12;//12;        //大弯时  舵机转角积分系数  放大100倍
-
 u8 Buffer1[ROW][COL] = { 0 }; //37*8=296
 /* 通过DMA采集(在isr.c中行中断中触发DMA采集)二维图像存储于Buffer1数组中，
  * ROW,COL在Include.h中定义 */
 
-u8 Threshold[40];
+u8 cmos[cmosrow][cmoscol] = { 0 };       //进行处理的数据
+u8 cmos_copy[cmosrow][cmoscol] = { 0 };  //进行处理的数据
+u8 cmos_update_flag = 0;                 //用于调试，置1后会刷新cmos的状况
+u8 cmos_cnst = 0x86, cmos_bright = 0x6A; //cmos的对比度和亮度
+u8 VSYN_Flag = 0;                        //完成一场标识位  0为未完成；1为完成
 
-u8 cmos[cmosrow][cmoscol] = { 0 }; //进行处理的数据
-
-u8 VSYN_Flag = 0; //完成一场标识位  0为未完成；1为完成
-u8 time;
 u8 ensend; //允许发送
 u8 enpwm;
 u8 entof;
 u8 enccd;
-u8 speedmodi; //速度修改标志
 
 // 光源位置
 u16 light_x;
@@ -65,24 +49,17 @@ u16 light_y;
 u8 cmos_see_light;
 
 //
-u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,
-    left_black, right_black, flag1 = 0;
-s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;
-u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;
-//
-unsigned short DuoCenter;    //舵机中间值 120HZ
 s32 TimeCount = 0;           //1ms中断标志
 s32 TimeCount_Max = 1000000; //计时最大时间为1e6ms=1000s
+
 s16 g_nMotorPulse[2];
 s32 g_nMotorPulseSigma[2];
 s16 g_MotorPWM[2] = { 0, 0 }; // 左右电机PWM值
 u8 g_MotorBrake[2];           // 左右电机刹车信号
 s16 speed[2] = { 0, 0 };      // 左右电机设置速度值
 
-char uart_dma_recv[4];
+char uart_dma_recv[16];
 u16 tof_value = 0; //tof测得的距离值
-
-extern u8 TIME1flag_100ms, flag_1ms;
 
 volatile u32 rowCnt = 0; //行计数
 
@@ -98,13 +75,21 @@ u8 ccd_max_light;
 u16 ccd_light_average;
 u16 ccd_light_width;
 u16 ccd_light_centre;
-u8 ccd_light_threshorld = 30;
-u16 ccd_exposuretime = 100;
+u8 ccd_light_threshorld = 0x0F;
+u16 ccd_exposuretime = 14;
+u8 ccd_upload_flag = 0;
 
+u16 distance[3] = { 0 };
+u16 voltage[3] = { 0 };
 u8 near_flag = 0;
 u8 near_distance_range = 30;
 
+u16 pwm_max = 1000;
+u16 pwm_near = 1000;
+u16 pwm_min = 1000;
+
 //-----------------函数声明------------------
+void image_erode(unsigned char (*t)[cmoscol], unsigned char (*temp)[cmoscol], unsigned char b);
 void ImageProc();
 void GPIO_Init();
 void PWM_Init();
@@ -127,38 +112,27 @@ void ccd_init();
 void ccd_gather();
 void ccd_upload();
 void ccd_proc();
-u16 voltage[3];
-u16 voltage[3];
-u16 distance[3];
 //-----------------主函数--------------------
 void main()
 {
     u8 sccb_ack;
-    DuoCenter = servMotorCenture; //舵机位置回到中心
 
     //debug标志
     ensend = 0;
     entof = 0;
-    enccd = 0;
+    enccd = 1;
 
     //开始初始化
     DisableInterrupts; //关闭中断开始初始化数据
-    /* FTM1_QUAD_Iint();  //正交解码测速  A相---PTA12  B相---PTA13 */
-    //但是我们的编码器并不是AB相的，需要从GPIO读入方向，从PTB16
-    GPIO_Init(); //------GPIO初始化  用于指示SCCB状态
-    sccb_init(); //-----SCCB初始化，用于配置摄像头状态
-    sccb_ack = sccb_refresh();
+    GPIO_Init();       //------GPIO初始化  用于指示SCCB状态
 
-    PWM_Init();  //-----PWM初始化，用于初始化舵机和电机的输出
-    EXTI_Init(); //-----外部中断初始化，用于摄像头中断触发
-    UART_Init(); //-----UART初始化，用于初始化串口
-    //TODO:分别检测PIT有无时，PIT和摄像头中断的时间情况（用示波器）
+    PWM_Init();            //-----PWM初始化，用于初始化舵机和电机的输出
+    UART_Init();           //-----UART初始化，用于初始化串口
     pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
-    //pit_init_ms(PIT1, 100);//初始化PIT1，定时时间为： 100ms
-    Image_Init();   //----图像数组初始化
-    ADC_Init(ADC0); //初始化AD接口，ADC0
+    ADC_Init(ADC0);        //初始化AD接口，ADC0，用于线阵CCD和红外测距
     EnableInterrupts;
     // 初始化结束
+    gpio_set(PORTA, 17, 1); //初始化，LED点亮
 
     uart_irq_EN(UART4);
     uart_dma_init(); //----TOF 串口DMA初始化
@@ -173,27 +147,12 @@ void main()
     rowCnt = 0;
     while (1) {
         get_distance();
-        if (VSYN_Flag == 1) //完成一幅图像采集
-        {
-            ImageProc();
-            VSYN_Flag = 0;
-            if (entof == 1) {
-                uart_putchar(UART4, tof_value / 1000 + '0');     //tof data
-                uart_putchar(UART4, tof_value / 100 % 10 + '0'); //tof_data
-                uart_putchar(UART4, tof_value / 10 % 10 + '0');  //tof_data
-                uart_putchar(UART4, tof_value % 10 + '0');       //tof_data
-                uart_putchar(UART4, '\n');                       //tof_data
-            }
-            decide_speed(); //根据光源位置状态决定PWM值
-            update_pwm();   //更新输出到驱动板的pwm值
-            ccd_init();
-            ccd_gather();
-            ccd_proc();
-            if (enccd)
-                ccd_upload();
-            EnableInterrupts;
-            gpio_turn(PORTE, 12); //PTE12取反，用于观察中断进入的时间间隔
+        if (ccd_upload_flag) {
+            ccd_upload();
+            ccd_upload_flag = 0;
         }
+        decide_speed(); //根据光源位置状态决定PWM值
+        update_pwm(); //更新输出到驱动板的pwm值
     }
 }
 
@@ -223,7 +182,7 @@ void GPIO_Init()
 
 void PWM_Init()
 {
-    FTM_PWM_init(FTM2, CH1, 50, DuoCenter); //初始化FTM0_CH0输出频率为50HZ,占空比为DuoCenter ：舵机 FTM2_CH1对应PTB19口
+    FTM_PWM_init(FTM2, CH1, 50, servValue); //初始化FTM0_CH0输出频率为50HZ,占空比为servValue ：舵机 FTM2_CH1对应PTB19口
     // 要改变占空比，用FTM_PWM_Duty
     FTM_PWM_init(FTM0, CH0, 10000, 0); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC1口,左侧电机
     FTM_PWM_init(FTM0, CH1, 10000, 0); //初始化FTM0_CH0输出频率为10KHZ,占空比dianjispeed ：FTM0_CH0对应PTC2口,右侧电机
@@ -237,6 +196,7 @@ void UART_Init()
 
 void EXTI_Init()
 {
+    // 全是和面阵cmos相关的函数
     //TODO:检查是上升沿还是下降沿
     //----初始化外部中断---//
     /* exti_init(PORTE, 0, rising_down); //HREF----PORTE0 端口外部中断初始化 ，上升沿触发中断，内部下拉 */
@@ -323,6 +283,8 @@ void ImageProc()
         uart_putchar(UART4, light_x & 0xFF);
         uart_putchar(UART4, light_y & 0xFF);
     }
+    memcpy(cmos_copy, cmos, sizeof(cmos));
+    image_erode(cmos_copy, cmos, 0); //腐蚀1像素
 }
 
 void get_distance()
@@ -493,15 +455,15 @@ void ccd_init()
         gpio_turn(PORTE, 2); //产生128个CLK时钟,曝光时序
         Dly_us();
     }
-    DELAY_MS(ccd_exposuretime); //设置曝光时间  3ms ,可以自行更改，达到最好的效果
 }
 
 void ccd_upload()
 {
     u8 i;
     uart_putchar(UART4, 0xFF); //图像头
-    for (i = 0; i < 128; i += 2)
+    for (i = 0; i < 128; i++) {
         uart_putchar(UART4, CCD[i] >> 1 & 0xFF);
+    }
 }
 void ccd_gather()
 {
@@ -509,7 +471,7 @@ void ccd_gather()
     // CLK PTE2
     // SI  PTE3
     // AO  AD9
-    u8 index = 0, i = 0;
+    u8 index = 127, i = 0;
     gpio_set(PORTE, 3, 1); //SI = 1
     gpio_set(PORTE, 2, 1); //CLK = 1
     Dly_us();
@@ -526,7 +488,7 @@ void ccd_gather()
         Dly_us();
         if ((i % 2) == 1) //  此时CLK = 1，为高电平
         {
-            CCD[++index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 2);
+            CCD[--index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 2);
         }
     }
     gpio_set(PORTE, 2, 1); // 产生最后一个CLK时钟
@@ -565,8 +527,6 @@ void ccd_proc()
     ccd_light_average &= 0xFF;
     ccd_light_width &= 0xFF;
     ccd_light_centre = (ccd_light_centre1 + ccd_light_centre2) / 2;
-    ccd_light_centre = 128 - ccd_light_centre;
-    ccd_max_light /= 8;
     ccd_max_light &= 0xFF;
 }
 
@@ -587,31 +547,21 @@ void DMAProc()
 
 void decide_speed()
 {
-    const u16 light_x_middle = 72;
-    const u16 pwm_max = 4000;
-    const u16 pwm_near = 1200;
-    u16 pwm_min = 900;
-    const u16 pwm_rotate[2] = { 4000, 0 };
-    const u16 tof_value_threshold = 400;
+    u16 light_x_middle = 72;
+    const u16 pwm_rotate[2] = { 1200, 0 };
+    const u16 distance_threshold = 400;
     u8 ccd_light_middle = 64; //CCD光源在正前方方向时的横坐标
 
-    DuoCenter = servMotorNear; //默认收回挡板
+    servValue = servMotorNear; //默认收回挡板
     //默认转圈找光
-    g_MotorPWM[left] = pwm_max / 2 * 3;
-    g_MotorPWM[right] = pwm_max / 9;
+    g_MotorPWM[left] = pwm_rotate[0];
+    g_MotorPWM[right] = pwm_rotate[1];
     // 寻光
     // CMOS优先
-    if (cmos_see_light) {
-        // 由光源在y轴的坐标决定总速度
-        u16 pwm_total = (pwm_max - pwm_near) * (light_y / 60) + pwm_near;
-        // 由光源在x轴的坐标决定左右轮速度的分配
-        g_MotorPWM[left] = light_x / 120 * pwm_total;
-        g_MotorPWM[right] = pwm_total - g_MotorPWM[left];
-    } else if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
-        g_MotorPWM[left] = ccd_light_centre / 128 * pwm_near;
-        g_MotorPWM[left] = pwm_near - g_MotorPWM[left];
+    if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
+        g_MotorPWM[left] = ccd_light_centre * 1.0 / (128) * pwm_near;
+        g_MotorPWM[right] = pwm_near - g_MotorPWM[left];
     }
-
     // 如果距离接近，停车50ms后进入灭灯模式
     if (distance[1] <= near_distance_range) {
         if (!near_flag) { //如果第一次进入灭灯模式，先停车200ms
@@ -624,17 +574,17 @@ void decide_speed()
             g_MotorBrake[right] = 0;
         }
     }
+
     // 灭灯模式下的动作
     if (near_flag) {
-        DuoCenter = servMotorFar;   //伸出挡板
-        g_MotorPWM[left] = pwm_min; //以最低速前进
-        g_MotorPWM[right] = pwm_min;
-        //原地转向
-        if (ccd_light_centre <= ccd_light_middle - 5)
-            g_MotorPWM[left] = -g_MotorPWM[left];
-        if (ccd_light_centre >= ccd_light_middle + 5)
-            g_MotorPWM[right] = -g_MotorPWM[right];
-        if (ccd_light_width <= 15) //已经灭灯
+        servValue = servMotorFar;   //伸出挡板
+        /* g_MotorPWM[left] = pwm_min; //以最低速前进 */
+        /* g_MotorPWM[right] = pwm_min; */
+        /*         if (ccd_light_centre <= ccd_light_middle - 5) */
+        /* g_MotorPWM[left] = -g_MotorPWM[left] / 3; */
+        /* if (ccd_light_centre >= ccd_light_middle + 5) */
+        /* g_MotorPWM[right] = -g_MotorPWM[right] / 3; */
+        if (ccd_light_width <= 2) //已经灭灯
         {
             //如果刹车，先把刹车退了
             g_MotorBrake[left] = 0;
@@ -651,12 +601,12 @@ void decide_speed()
     if (move_back_flag) {
         g_MotorPWM[left] = -pwm_near;
         g_MotorPWM[right] = -pwm_near;
-        if ((TimeCount - back_start_time) % TimeCount_Max > 100) {
+        if ((TimeCount - back_start_time) % TimeCount_Max > 1000) {
             //已经倒车1s，需要回到正常状态
             move_back_flag = 0;
         }
     }
-    FTM_PWM_Duty(FTM2, CH1, DuoCenter); //挡板状态更新
+    FTM_PWM_Duty(FTM2, CH1, servValue); //挡板状态更新
 
 #if 0
     //三种情况
@@ -679,7 +629,7 @@ void decide_speed()
         g_MotorPWM[right] = pwm_max * -0.6;
         return;
     }
-    if (tof_value >= tof_value_threshold && !cmos_see_light) {
+    if (tof_value >= distance_threshold && !cmos_see_light) {
         // 打转找光,800ms打转,200ms前进
         if (TimeCount <= 800) {
             g_MotorPWM[left] = pwm_rotate[left];
@@ -688,7 +638,7 @@ void decide_speed()
             g_MotorPWM[left] = pwm_max * 0.6;
             g_MotorPWM[right] = pwm_max * 0.6;
         }
-        DuoCenter = servMotorNear; //收回挡板
+        servValue = servMotorNear; //收回挡板
     }
     // 速度整体把握
     if (cmos_see_light) {
@@ -698,9 +648,9 @@ void decide_speed()
         // 向光源移动，速度随光源远近调整
         g_MotorPWM[left] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
         g_MotorPWM[right] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
-    } else if (tof_value < tof_value_threshold) { //第一优先级：TOF,顺便伸出挡板
-        g_MotorPWM[left] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
-        g_MotorPWM[right] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (tof_value_threshold - tof_value_min) + pwm_min;
+    } else if (tof_value < distance_threshold) { //第一优先级：TOF,顺便伸出挡板
+        g_MotorPWM[left] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (distance_threshold - tof_value_min) + pwm_min;
+        g_MotorPWM[right] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (distance_threshold - tof_value_min) + pwm_min;
     }
     //转向调节
     if (light_x <= light_x_middle - 3) {
@@ -709,9 +659,40 @@ void decide_speed()
         g_MotorPWM[right] -= 1200;
     }
     //是否伸出灭灯板
-    if (tof_value <= tof_value_threshold)
-        DuoCenter = servMotorFar; //伸出挡板
-    FTM_PWM_Duty(FTM2, CH1, DuoCenter);
+    if (tof_value <= distance_threshold)
+        servValue = servMotorFar; //伸出挡板
+    FTM_PWM_Duty(FTM2, CH1, servValue);
 #endif
+}
+
+void image_erode(unsigned char (*t)[cmoscol], unsigned char (*temp)[cmoscol], unsigned char b)
+{
+    u8 a = b;
+    unsigned int i, j;
+    u8 V = cmoscol, H = cmosrow;
+    for (i = 1; i < V - 1; i++)
+        for (j = 1; j < H - 1; j++)
+            if (t[i][j - 1] == a || t[i][j + 1] == a || t[i - 1][j] == a || t[i + 1][j] == a) //对图像内部进行置一处理
+                temp[i][j] = a;
+    for (i = 1; i < V - 1; i++) {
+        if (t[i - 1][0] == a || t[i + 1][0] == a) //对图像第一列数据置一处理
+            temp[i][0] = a;
+        if (t[i - 1][H - 1] == a || t[i + 1][H - 1] == a) //对图像最后一列置一处理
+            temp[i][H - 1] = a;
+    }
+    for (j = 0; j < H - 1; j++) {
+        if (t[0][j - 1] == a || t[0][j + 1] == a) //对第一行进行置一处理
+            temp[0][j] = a;
+        if (t[V - 1][j - 1] == a || t[V - 1][j + 1] == a) //对最后一行进行置一处理
+            temp[V - 1][j] = a;
+    }
+    if (t[0][1] == a || t[1][0] == a) //对四个角进行置一处理
+        temp[0][0] = a;
+    if (t[0][H - 2] == a || t[1][H - 1] == a)
+        temp[0][H - 1] = a;
+    if (t[V - 2][0] == a || t[V - 1][1] == a)
+        temp[V - 1][0] = a;
+    if (t[V - 2][H - 1] == a || t[V - 1][H - 2] == a)
+        temp[V - 1][H - 1] = a;
 }
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 data_length = 128
-port_name = 'COM6'
+port_name = 'COM4'
 baudrate = 115200
 
 ser = serial.Serial(port_name, baudrate, timeout=1)
@@ -46,8 +46,7 @@ while True:
     datas = ser.read(int(ccol * crow / 4))
     datas_1d = np.frombuffer(datas, dtype=np.uint8)
     datas_unpack = np.unpackbits(
-        datas_1d.reshape((len(datas_1d), 1)), axis=1)[:, 4:].reshape((crow,
-                                                                      ccol))
+        datas_1d.reshape((len(datas_1d), 1)), axis=1)[:, 4:].reshape((crow, ccol))
     # 读取其它数据（光源等）
     ch = ser.read()
     see_light = converter(ch)
