@@ -39,6 +39,10 @@ extern void DMAProc();
 
 extern s32 TimeCount; //计时
 const extern s32 TimeCount_Max;
+
+u8 brake_times = 0;
+extern u8 g_MotorBrake[2];
+extern u8 too_much_brake_flag;
 unsigned char flag_1ms = 0;
 u8 TIME1flag_100ms = 0;
 /*************************************************************************
@@ -114,7 +118,7 @@ void PIT0_IRQHandler(void) //1ms
     if (TimeCount >= TimeCount_Max)
         TimeCount -= TimeCount_Max; //最大定时时间1000s
     if (!ccd_upload_flag) {
-        if (TimeCount % 20 == 0){
+        if (TimeCount % 10 == 0){
             ccd_gather();
             ccd_proc();
             ccd_init();
@@ -124,6 +128,14 @@ void PIT0_IRQHandler(void) //1ms
             ccd_upload_flag = 1;
         }
     }
+    //统计刹车时间，如果刹车过长，则进入原地打转
+    if (TimeCount % 1000) {
+        brake_times = 0; //每1s清零一次刹车计数
+        too_much_brake_flag = 0;
+    }
+    if (g_MotorBrake[0]) brake_times ++;
+    if (brake_times >= 80) too_much_brake_flag = 1;
+    
 }
 
 /*************************************************************************

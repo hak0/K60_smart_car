@@ -69,26 +69,30 @@ u8 encoder_select = 1; //选择编码器,0表示左1表示右
 u32 brake_start_time = 0;
 u32 back_start_time = 0;
 u8 move_back_flag = 0;
+u8 move_back_direction = 0;
 
-u8 CCD[128]; //CCD AD亮度值
-u8 ccd_max_light;
-u16 ccd_light_average;
-u16 ccd_light_width;
-u16 ccd_light_centre;
-u8 ccd_light_threshorld = 0x0C;
+u16 CCD[128]; //CCD AD亮度值
+u16 ccd_max_light;
+u32 ccd_light_average;
+u32 ccd_light_width;
+u32 ccd_light_centre;
+u16 ccd_light_threshorld = 50;
 u16 ccd_exposuretime = 14;
 u8 ccd_upload_flag = 0;
+u8 ccd_last_direction = 0;
 
 u16 distance[3] = { 0 };
 u16 voltage[3] = { 0 };
 u8 near_flag = 0;
-u8 near_distance_range = 50;
+u8 near_distance_range = 40;
 
-u16 pwm_max = 6000;
-u16 pwm_near = 1500;
-u16 pwm_min = 1300;
-u16 pwm_back = 2000;
-u16 pwm_rotate[2] = { 1300, 0 };
+u16 pwm_max = 6600;
+u16 pwm_near = 3000;
+u16 pwm_min = 1200;
+u16 pwm_back = 1500;
+u16 pwm_rotate[2] = { 1500, 0 };
+
+u8 too_much_brake_flag = 0;
 
 //-----------------函数声明------------------
 void image_erode(unsigned char (*t)[cmoscol], unsigned char (*temp)[cmoscol], unsigned char b);
@@ -99,7 +103,6 @@ void UART_Init();
 void EXTI_Init();
 void Image_Init();
 void run();
-void turn_off_light();
 void update_pwm();
 void CountThreshole(void);
 void datatrans();
@@ -153,8 +156,10 @@ void main()
             ccd_upload();
             ccd_upload_flag = 0;
         }
+        DisableInterrupts;
         decide_speed(); //根据光源位置状态决定PWM值
         update_pwm(); //更新输出到驱动板的pwm值
+        EnableInterrupts;
     }
 }
 
@@ -360,28 +365,6 @@ void update_pwm()
             FTM_PWM_Duty(FTM0, PWMCH[side], abs(g_MotorPWM[side]));
     }
 }
-void turn_off_light()
-{
-    /* 快把浴霸关上!(误) */
-    /* 伸出挡板，挡光 */
-    if (g_MotorBrake[left] == 0 && g_MotorBrake[right] == 0) {
-        brake_start_time = TimeCount;
-        g_MotorBrake[left] = 1;  //PWM置零
-        g_MotorBrake[right] = 1; //刹车标记始能
-        gpio_set(PORTE, 11, 1);  //物理刹车
-    } else if (g_MotorBrake[left] == 1 && g_MotorBrake[right] == 1) {
-        if ((TimeCount - brake_start_time) % 1000 >= 5)
-            gpio_set(PORTE, 11, 0); //收回物理刹车
-        if ((TimeCount - brake_start_time) % 1000 >= 20) {
-            g_MotorBrake[left] = 0;
-            g_MotorBrake[right] = 0;
-            if (1) {
-                move_back_flag = 1;
-                back_start_time = TimeCount;
-            } //如果没有光了，就开始后退
-        }
-    }
-}
 
 void PID()
 {
@@ -464,7 +447,10 @@ void ccd_upload()
     u8 i;
     uart_putchar(UART4, 0xFF); //图像头
     for (i = 0; i < 128; i++) {
-        uart_putchar(UART4, CCD[i] >> 1 & 0xFF);
+        if (CCD[i] >> 8 & 0xFF > 0) //高位有、数值
+            uart_putchar(UART4, 0x7F); //输出最高值127
+        else //只有低8位有数据
+            uart_putchar(UART4, CCD[i] >> 1 & 0xFF); //直接输出低位值的一半
     }
 }
 void ccd_gather()
@@ -483,14 +469,14 @@ void ccd_gather()
     gpio_set(PORTE, 2, 0); //CLK = 0
     Dly_us();
 
-    CCD[index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 2);
+    CCD[index] = ADC_Ave(ADC0, ADC0_DM1, ADC_10bit, 2);
     for (i = 0; i < 254; i++) // i<254,是之前已经采集了一个像素点，这里只需采集127个
     {
         gpio_turn(PORTE, 2); //产生128个CLK时钟
         Dly_us();
         if ((i % 2) == 1) //  此时CLK = 1，为高电平
         {
-            CCD[--index] = ADC_Ave(ADC0, ADC0_DM1, ADC_8bit, 2);
+            CCD[--index] = ADC_Ave(ADC0, ADC0_DM1, ADC_10bit, 2);
         }
     }
     gpio_set(PORTE, 2, 1); // 产生最后一个CLK时钟
@@ -550,20 +536,21 @@ void DMAProc()
 void decide_speed()
 {
     u16 light_x_middle = 72;
-    const u16 distance_threshold = 400;
     u8 ccd_light_middle = 64; //CCD光源在正前方方向时的横坐标
 
     servValue = servMotorNear; //默认收回挡板
     //默认转圈找光
-    g_MotorPWM[left] = pwm_rotate[0];
-    g_MotorPWM[right] = pwm_rotate[1];
+    g_MotorPWM[1-ccd_last_direction] = pwm_rotate[0];
+    g_MotorPWM[ccd_last_direction] = pwm_rotate[1];
+    /* if (too_much_brake_flag) return; //如果打转次数太多就原地打转 */
     // 寻光
     // CMOS优先
     double speed_up_rate = (30 > ccd_light_width) ? (30 - ccd_light_width)/30.0 : 0;
     u16 pwm_temp = speed_up_rate * (pwm_max-pwm_near) + pwm_near;
     if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
-        g_MotorPWM[left] = pwm_temp * (1.0 - (128 - ccd_light_centre) * 0.14 / 128);
-        g_MotorPWM[right] = pwm_temp * (1.0 - (ccd_light_centre) * 0.14 / 128);
+        g_MotorPWM[left] = pwm_temp * (1.0 - (128 - ccd_light_centre) * 0.5 / 128);
+        g_MotorPWM[right] = pwm_temp * (1.0 - (ccd_light_centre) * 0.5 / 128);
+        ccd_last_direction = ccd_light_centre > ccd_light_middle;
     }
     // 如果距离接近，停车50ms后进入灭灯模式
     if (distance[0] <= near_distance_range-10 || distance[1] <= near_distance_range || distance[2] <= near_distance_range-10) {
@@ -572,12 +559,12 @@ void decide_speed()
             g_MotorBrake[right] = 1;
             brake_start_time = TimeCount;
             near_flag = 1;
-        } else if ((TimeCount - brake_start_time) % TimeCount_Max >= 200) {
+        }
+    }
+    if ((TimeCount - brake_start_time + TimeCount_Max) % TimeCount_Max >= 200) { //200ms后关闭刹车，该干嘛干嘛
             g_MotorBrake[left] = 0;
             g_MotorBrake[right] = 0;
         }
-    }
-
     // 灭灯模式下的动作
     if (near_flag) {
         servValue = servMotorFar;   //伸出挡板
@@ -585,91 +572,32 @@ void decide_speed()
             g_MotorPWM[left] = ccd_light_centre * 1.0 / (128) * pwm_min;
             g_MotorPWM[right] = pwm_min - g_MotorPWM[left];
         }
-        /* g_MotorPWM[left] = pwm_min; //以最低速前进 */
-        /* g_MotorPWM[right] = pwm_min; */
-        /*         if (ccd_light_centre <= ccd_light_middle - 5) */
-        /* g_MotorPWM[left] = -g_MotorPWM[left] / 3; */
-        /* if (ccd_light_centre >= ccd_light_middle + 5) */
-        /* g_MotorPWM[right] = -g_MotorPWM[right] / 3; */
-        if (ccd_light_width <= 4) //已经灭灯
+        if (ccd_light_width <= 15) //已经灭灯
         {
             //如果刹车，先把刹车退了
             g_MotorBrake[left] = 0;
             g_MotorBrake[right] = 0;
-            //倒车0.3s
+            //倒车0.4s
             back_start_time = TimeCount;
             near_flag = 0;
+            move_back_direction = distance[0] > distance[1]; //左0右1
             move_back_flag = 1;
             g_MotorPWM[left] = pwm_back;
             g_MotorPWM[right] = pwm_back;
+
         }
     }
-    // 倒车，持续时间都是1s
+    // 倒车，持续时间都是0.4s
     if (move_back_flag) {
-        g_MotorPWM[left] = -pwm_near;
-        g_MotorPWM[right] = -pwm_near;
-        if ((TimeCount - back_start_time) % TimeCount_Max > 300) {
-            //已经倒车1s，需要回到正常状态
+        g_MotorPWM[left] = -pwm_back;
+        g_MotorPWM[right] = -pwm_back;
+        g_MotorPWM[move_back_direction] = g_MotorPWM[move_back_direction]* 0.75;
+        if ((TimeCount - back_start_time + TimeCount_Max) % TimeCount_Max > 400) {
+            //已经倒车0.4s，需要回到正常状态
             move_back_flag = 0;
         }
     }
     FTM_PWM_Duty(FTM2, CH1, servValue); //挡板状态更新
-
-#if 0
-    //三种情况
-    //1. 摄像头未捕获，TOF无反馈 -> 打转一段时间后寻光
-    //2. 摄像头未捕获，TOF反馈 -> 直行，根据TOF调速
-    //3. 摄像头捕获，TOF无反馈 -> 确定方向，前进
-    //4. 摄像头捕获，TOF反馈 -> 避障,向一侧转向,在TOF无反馈的基础上调整
-    //三个环节：
-    //倒车标志的处理，寻光(特殊情况)
-    //整体速度的把握，摄像头优先级高于TOF，有障碍的情况再议
-    //转向如果有摄像头指导，按照摄像头的数据来
-    //
-    //特殊情况
-    if (move_back_flag) {
-        //倒退1s，不接收反驳
-        if ((TimeCount - back_start_time) % 1000 >= 20) {
-            move_back_flag = 0;
-        }
-        g_MotorPWM[left] = pwm_max * -0.6;
-        g_MotorPWM[right] = pwm_max * -0.6;
-        return;
-    }
-    if (tof_value >= distance_threshold && !cmos_see_light) {
-        // 打转找光,800ms打转,200ms前进
-        if (TimeCount <= 800) {
-            g_MotorPWM[left] = pwm_rotate[left];
-            g_MotorPWM[right] = pwm_rotate[right];
-        } else {
-            g_MotorPWM[left] = pwm_max * 0.6;
-            g_MotorPWM[right] = pwm_max * 0.6;
-        }
-        servValue = servMotorNear; //收回挡板
-    }
-    // 速度整体把握
-    if (cmos_see_light) {
-        /* if (gpio_get(PORTE, 12)) 可以用光敏电阻区分是障碍物还是光源*/
-        //TODO:区分光源与障碍物，避障
-        /* 这里都默认为光源 */
-        // 向光源移动，速度随光源远近调整
-        g_MotorPWM[left] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
-        g_MotorPWM[right] = (pwm_max - pwm_min) * (62 - light_y) / 62 + pwm_min;
-    } else if (tof_value < distance_threshold) { //第一优先级：TOF,顺便伸出挡板
-        g_MotorPWM[left] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (distance_threshold - tof_value_min) + pwm_min;
-        g_MotorPWM[right] = (tof_value - tof_value_min) * (pwm_near - pwm_min) / (distance_threshold - tof_value_min) + pwm_min;
-    }
-    //转向调节
-    if (light_x <= light_x_middle - 3) {
-        g_MotorPWM[left] -= 1200;
-    } else if (light_x >= light_x_middle + 3) {
-        g_MotorPWM[right] -= 1200;
-    }
-    //是否伸出灭灯板
-    if (tof_value <= distance_threshold)
-        servValue = servMotorFar; //伸出挡板
-    FTM_PWM_Duty(FTM2, CH1, servValue);
-#endif
 }
 
 void image_erode(unsigned char (*t)[cmoscol], unsigned char (*temp)[cmoscol], unsigned char b)
