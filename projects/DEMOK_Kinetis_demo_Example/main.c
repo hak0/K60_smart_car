@@ -84,10 +84,10 @@ u8 ccd_last_direction = 0;
 u16 distance[3] = { 0 };
 u16 voltage[3] = { 0 };
 u8 near_flag = 0;
-u8 near_distance_range = 40;
+u8 near_distance_range = 30;
 
-u16 pwm_max = 6600;
-u16 pwm_near = 3000;
+u16 pwm_max = 7000;
+u16 pwm_near = 3500;
 u16 pwm_min = 1200;
 u16 pwm_back = 1500;
 u16 pwm_rotate[2] = { 1500, 0 };
