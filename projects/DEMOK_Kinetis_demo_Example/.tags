@@ -1,0 +1,125 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Buffer1	.\main.c	/^u8 Buffer1[ROW][COL] = { 0 }; \/\/37*8=296$/;"	v
+CountThreshold	.\main.c	/^void CountThreshold(void) \/\/找出黑点最大和白点最小的两个数，计算i行的阈值，就第0行用到了$/;"	f	signature:(void)
+CountThreshole	.\main.c	/^void CountThreshole(void);$/;"	p	file:	signature:(void)
+DMA_CH4_Handler	.\isr.c	/^void DMA_CH4_Handler(void)$/;"	f	signature:(void)
+DuoCenter	.\main.c	/^unsigned short DuoCenter; \/\/舵机中间值 120HZ$/;"	v
+DuoDir	.\main.c	/^u8 DuoDir; \/\/转向时方向$/;"	v
+EXTI_Init	.\main.c	/^void EXTI_Init()$/;"	f
+EXTI_Init	.\main.c	/^void EXTI_Init();$/;"	p	file:
+FTM0_IRQHandler	.\isr.c	/^void FTM0_IRQHandler()$/;"	f
+FTM1_IRQHandler	.\isr.c	/^void FTM1_IRQHandler()$/;"	f
+FTM2_IRQHandler	.\isr.c	/^void FTM2_IRQHandler()$/;"	f
+GPIO_Init	.\main.c	/^void GPIO_Init()$/;"	f
+GPIO_Init	.\main.c	/^void GPIO_Init();$/;"	p	file:
+HardFault_Handler	.\isr.c	/^void HardFault_Handler(void)$/;"	f	signature:(void)
+ImageProc	.\main.c	/^void ImageProc()$/;"	f
+ImageProc	.\main.c	/^void ImageProc();$/;"	p	file:
+Image_Init	.\main.c	/^void Image_Init()$/;"	f
+Image_Init	.\main.c	/^void Image_Init();$/;"	p	file:
+Is_SendPhoto	.\isr.c	/^unsigned char Is_SendPhoto = 0;$/;"	v
+LastErr	.\main.c	/^s32 PreErr = 0, LastErr = 0, dErr = 0;$/;"	v
+PID	.\main.c	/^void PID()$/;"	f
+PID	.\main.c	/^void PID();$/;"	p	file:
+PIT0_IRQHandler	.\isr.c	/^void PIT0_IRQHandler(void) \/\/1ms$/;"	f	signature:(void)
+PIT0_IRQHandler	.\isr.c	/^void PIT0_IRQHandler(void)$/;"	f	signature:(void)
+PORTE_IRQHandler	.\isr.c	/^void PORTE_IRQHandler()$/;"	f
+PWM_Init	.\main.c	/^void PWM_Init()$/;"	f
+PWM_Init	.\main.c	/^void PWM_Init();$/;"	p	file:
+PendSV_Handler	.\isr.c	/^void PendSV_Handler(void)$/;"	f	signature:(void)
+PreErr	.\main.c	/^s32 PreErr = 0, LastErr = 0, dErr = 0;$/;"	v
+SampleFlag	.\isr.c	/^u8 SampleFlag = 0;$/;"	v
+SysTick_Handler	.\isr.c	/^void SysTick_Handler(void)$/;"	f	signature:(void)
+TIME1flag_100ms	.\isr.c	/^u8 TIME1flag_100ms = 0;$/;"	v
+Threshold	.\main.c	/^u8 Threshold[40];$/;"	v
+TimeCount	.\main.c	/^s32 TimeCount = 0;        \/\/1ms中断标志$/;"	v
+UART_Init	.\main.c	/^void UART_Init()$/;"	f
+UART_Init	.\main.c	/^void UART_Init();$/;"	p	file:
+USART3_IRQHandler	.\isr.c	/^void USART3_IRQHandler(void)$/;"	f	signature:(void)
+USART4_IRQHandler	.\isr.c	/^void USART4_IRQHandler(void)$/;"	f	signature:(void)
+VSYN_Flag	.\main.c	/^u8 VSYN_Flag = 0; \/\/完成一场标识位  0为未完成；1为完成$/;"	v
+V_Cnt	.\isr.c	/^unsigned char V_Cnt = 0;$/;"	v
+back	.\main.c	26;"	d	file:
+black_left	.\main.c	/^u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,$/;"	v
+black_right	.\main.c	/^u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,$/;"	v
+break_sum	.\main.c	/^s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;$/;"	v
+centure	.\main.c	/^u32 centure = 0;    \/\/计算出的当前车体的中心位置[无符号数]$/;"	v
+centureErr	.\main.c	/^s32 centureErr = 0; \/\/计算出的当前车体位置偏差 [有符号数]$/;"	v
+cmos	.\main.c	/^u8 cmos[cmosrow][cmoscol] = { 0 }; \/\/进行处理的数据$/;"	v
+cmoscol	.\main.c	18;"	d	file:
+cmosrow	.\main.c	17;"	d	file:
+comscolbyte	.\main.c	19;"	d	file:
+dErr	.\main.c	/^s32 PreErr = 0, LastErr = 0, dErr = 0;$/;"	v
+dPram	.\main.c	/^u16 dPram;    \/\/舵机转角积分系数  放大100倍$/;"	v
+dPram1	.\main.c	/^u16 dPram1 = 16;    \/\/12;\/\/12;        \/\/直线时  舵机转角积分系数  放大100倍$/;"	v
+dPram2	.\main.c	/^u16 dPram2 = 13;    \/\/12;\/\/12;        \/\/小弯时  舵机转角积分系数  放大100倍$/;"	v
+dPram3	.\main.c	/^u16 dPram3 = 10;    \/\/12;\/\/12;        \/\/大弯时  舵机转角积分系数  放大100倍$/;"	v
+data_receive	.\isr.c	/^char data_receive[25];$/;"	v
+datatrans	.\main.c	/^void datatrans() \/\/buffer1 的 50~100行$/;"	f
+datatrans	.\main.c	/^void datatrans();$/;"	p	file:
+duty_max	.\main.c	20;"	d	file:
+encoder_dir	.\main.c	/^u8 encoder_dir;        \/\/编码器方向$/;"	v
+encoder_select	.\main.c	/^u8 encoder_select = 1; \/\/选择编码器,0表示左1表示右$/;"	v
+enpwm	.\main.c	/^u8 enpwm;$/;"	v
+ensend	.\main.c	/^u8 ensend; \/\/允许发送$/;"	v
+field_lost	.\main.c	/^s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;$/;"	v
+flag1	.\main.c	/^    left_black, right_black, flag1 = 0;$/;"	v
+flag_1ms	.\isr.c	/^unsigned char flag_1ms = 0;$/;"	v
+front	.\main.c	25;"	d	file:
+g_MotorBrake	.\main.c	/^u8 g_MotorBrake[2];           \/\/ 左右电机刹车信号$/;"	v
+g_MotorPWM	.\main.c	/^s16 g_MotorPWM[2] = { 0, 0 }; \/\/ 左右电机PWM值$/;"	v
+g_nMotorPulse	.\main.c	/^s16 g_nMotorPulse[2];$/;"	v
+g_nMotorPulseSigma	.\main.c	/^s32 g_nMotorPulseSigma[2];$/;"	v
+get_light_position	.\main.c	/^void get_light_position()$/;"	f
+index_bt	.\isr.c	/^int index_bt = 0;$/;"	v
+index_tof	.\isr.c	/^int index_tof = 0;$/;"	v
+left	.\main.c	23;"	d	file:
+left_black	.\main.c	/^    left_black, right_black, flag1 = 0;$/;"	v
+left_lost	.\main.c	/^u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,$/;"	v
+light_x	.\main.c	/^u16 light_x;$/;"	v
+light_y	.\main.c	/^u16 light_y;$/;"	v
+lost_flag	.\main.c	/^u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,$/;"	v
+main	.\main.c	/^void main()$/;"	f
+part2_sum	.\main.c	/^s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;$/;"	v
+qian2	.\main.c	/^u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;$/;"	v
+right	.\main.c	24;"	d	file:
+right_black	.\main.c	/^    left_black, right_black, flag1 = 0;$/;"	v
+right_lost	.\main.c	/^u16 left_lost = 0, right_lost = 0, black_left, black_right, lost_flag,$/;"	v
+rowCnt	.\main.c	/^volatile u32 rowCnt = 0; \/\/行计数$/;"	v
+row_mid	.\main.c	/^s16 row_mid;    \/\/中线值$/;"	v
+row_midold	.\main.c	/^s16 row_midold; \/\/前一次中线值$/;"	v
+run	.\isr.c	/^extern void run();$/;"	p	file:
+run	.\main.c	/^void run()$/;"	f
+run	.\main.c	/^void run();$/;"	p	file:
+servMotorCenture	.\main.c	11;"	d	file:
+servMotorFar	.\main.c	14;"	d	file:
+servMotorNear	.\main.c	12;"	d	file:
+servPram	.\main.c	/^u16 servPram; \/\/舵机转角比例系数 放大10倍$/;"	v
+servPram1	.\main.c	/^u16 servPram1 = 12; \/\/22;\/\/22;     \/\/直线时 舵机转角比例系数 放大10倍$/;"	v
+servPram2	.\main.c	/^u16 servPram2 = 14; \/\/22;\/\/22;     \/\/小弯时 舵机转角比例系数 放大10倍$/;"	v
+servPram3	.\main.c	/^u16 servPram3 = 19; \/\/22;\/\/22;     \/\/大弯时 舵机转角比例系数 放大10倍$/;"	v
+shiziwan_left	.\main.c	/^u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;$/;"	v
+shiziwan_right	.\main.c	/^u8 qian2 = 0, shiziwan_left = 0, shiziwan_right = 0;$/;"	v
+speed	.\main.c	/^s16 speed[2] = { 0, 0 };      \/\/ 左右电机设置速度值$/;"	v
+speedmodi	.\main.c	/^u8 speedmodi; \/\/速度修改标志$/;"	v
+sum_m	.\main.c	/^s16 sum_m = 0, part2_sum = 0, field_lost = 0, break_sum = 0;$/;"	v
+time	.\main.c	/^u8 time;$/;"	v
+tof_num_flag	.\isr.c	/^u8 tof_num_flag = 0;$/;"	v
+tof_receive	.\isr.c	/^char tof_receive[5];$/;"	v
+tof_value	.\main.c	/^u16 tof_value = 0; \/\/tof测得的距离值$/;"	v
+turn1	.\main.c	/^s32 turn1 = 0;      \/\/边界走势  正为向左偏转  负为向右偏转$/;"	v
+turn2	.\main.c	/^s32 turn2 = 0;$/;"	v
+turn_off_light	.\main.c	/^void turn_off_light()$/;"	f
+turn_off_light	.\main.c	/^void turn_off_light();$/;"	p	file:
+update_pwm	.\main.c	/^void update_pwm()$/;"	f
+update_pwm	.\main.c	/^void update_pwm();$/;"	p	file:
+workmode	.\main.c	/^u8 workmode;$/;"	v
+youEdgeFlag	.\main.c	/^u8 youEdgeFlag = 0; \/\/右边界确认标志，找到后边界置位$/;"	v
+youPos	.\main.c	/^s32 youPos = 0; \/\/右边界位置[有符号数]$/;"	v
+zuoEdgeFlag	.\main.c	/^u8 zuoEdgeFlag = 0; \/\/左边界确认标志，找到后边界置位$/;"	v
+zuoPos	.\main.c	/^s32 zuoPos = 0; \/\/左边界位置[有符号数]$/;"	v

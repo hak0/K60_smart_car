@@ -76,21 +76,21 @@ u16 ccd_max_light;
 u32 ccd_light_average;
 u32 ccd_light_width;
 u32 ccd_light_centre;
-u16 ccd_light_threshorld = 50;
-u16 ccd_exposuretime = 14;
+u16 ccd_light_threshorld = 150;
+u16 ccd_exposuretime = 160;
 u8 ccd_upload_flag = 0;
 u8 ccd_last_direction = 0;
 
 u16 distance[3] = { 0 };
 u16 voltage[3] = { 0 };
 u8 near_flag = 0;
-u8 near_distance_range = 30;
+u8 near_distance_range = 40;
 
-u16 pwm_max = 7000;
-u16 pwm_near = 3500;
-u16 pwm_min = 1200;
-u16 pwm_back = 1500;
-u16 pwm_rotate[2] = { 1500, 0 };
+u16 pwm_max = 8000;
+u16 pwm_near = 3000;
+u16 pwm_min = 1200;//1200//1500
+u16 pwm_back = 1200;
+u16 pwm_rotate[2] = { 1500, -1300 };//1500 0//
 
 u8 too_much_brake_flag = 0;
 
@@ -133,7 +133,8 @@ void main()
 
     PWM_Init();            //-----PWM初始化，用于初始化舵机和电机的输出
     UART_Init();           //-----UART初始化，用于初始化串口
-    pit_init_ms(PIT0, 10); //初始化PIT0，定时时间为： 10ms
+    
+    pit_init_ms(PIT0, 8); //初始化PIT0，定时时间为： 10ms
     ADC_Init(ADC0);        //初始化AD接口，ADC0，用于线阵CCD和红外测距
     EnableInterrupts;
     // 初始化结束
@@ -165,12 +166,14 @@ void main()
 
 void GPIO_Init()
 {
-    gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
-    gpio_init(PORTB, 17, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受编码器方向
+    gpio_init(PORTB, 16, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受对管(寻灯时后轮防止流星锤)(左后)
+    gpio_init(PORTB, 17, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受对管(寻灯时后轮防止流行锤)(右后)
     /* gpio_init(PORTE, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻 */
     //对管
     gpio_init(PORTE, 2, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
     gpio_init(PORTE, 3, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受光敏电阻
+    gpio_init(PORTA, 12, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受对管(倒车)
+    gpio_init(PORTA, 13, GPI_UP_PF, 1); //初始化PTB16为电平输入，上拉，接受对管(倒车)
     /* gpio_init(PORTB, 17, GPO, encoder_select);                                //初始化PTB17为电平输出，，选择当前检测的编码器 */
     gpio_init(PORTA, 17, GPO, 1);                                             //初始化PTE0为高电平输出---LED0
     gpio_set(PORTA, 17, 1);                                                   //设置PTE0为高电平输出，LED0灭
@@ -447,10 +450,10 @@ void ccd_upload()
     u8 i;
     uart_putchar(UART4, 0xFF); //图像头
     for (i = 0; i < 128; i++) {
-        if (CCD[i] >> 8 & 0xFF > 0) //高位有、数值
+        if (((CCD[i] >> 8) & 0xFF) > 0) //高位有、数值
             uart_putchar(UART4, 0x7F); //输出最高值127
         else //只有低8位有数据
-            uart_putchar(UART4, CCD[i] >> 1 & 0xFF); //直接输出低位值的一半
+            uart_putchar(UART4, CCD[i] >> 1 & 0xFF); //直接输出低位值的一半//>>2
     }
 }
 void ccd_gather()
@@ -469,14 +472,14 @@ void ccd_gather()
     gpio_set(PORTE, 2, 0); //CLK = 0
     Dly_us();
 
-    CCD[index] = ADC_Ave(ADC0, ADC0_DM1, ADC_10bit, 2);
+    CCD[index] = ADC_Ave(ADC0, ADC0_DM1, ADC_12bit, 2);
     for (i = 0; i < 254; i++) // i<254,是之前已经采集了一个像素点，这里只需采集127个
     {
         gpio_turn(PORTE, 2); //产生128个CLK时钟
         Dly_us();
         if ((i % 2) == 1) //  此时CLK = 1，为高电平
         {
-            CCD[--index] = ADC_Ave(ADC0, ADC0_DM1, ADC_10bit, 2);
+            CCD[--index] = ADC_Ave(ADC0, ADC0_DM1, ADC_12bit, 2);
         }
     }
     gpio_set(PORTE, 2, 1); // 产生最后一个CLK时钟
@@ -540,20 +543,30 @@ void decide_speed()
 
     servValue = servMotorNear; //默认收回挡板
     //默认转圈找光
+    //转圈找光时，防止后方轮子撞到轮子
+    if (!gpio_get(PORTB, 16)) last_direction = 1; //左边检测到障碍物，屁股向右
+    if (!gpio_get(PORTB, 17)) last_direction = 0; //右边检测到障碍物，屁股向左
     g_MotorPWM[1-ccd_last_direction] = pwm_rotate[0];
     g_MotorPWM[ccd_last_direction] = pwm_rotate[1];
-    /* if (too_much_brake_flag) return; //如果打转次数太多就原地打转 */
     // 寻光
     // CMOS优先
-    double speed_up_rate = (30 > ccd_light_width) ? (30 - ccd_light_width)/30.0 : 0;
-    u16 pwm_temp = speed_up_rate * (pwm_max-pwm_near) + pwm_near;
-    if (ccd_light_width >= 2) { //其次用线阵CCD判断距离
-        g_MotorPWM[left] = pwm_temp * (1.0 - (128 - ccd_light_centre) * 0.5 / 128);
-        g_MotorPWM[right] = pwm_temp * (1.0 - (ccd_light_centre) * 0.5 / 128);
+    double speed_up_rate = (30 > ccd_light_width) ? (30 - ccd_light_width)/30.0 : 0;//这是无敌逍哥的代码
+    //double speed_up_rate =  (30.0-0.3*ccd_light_width)/30.0 ;
+    
+    u16 pwm_temp = speed_up_rate * (pwm_max-pwm_near) + pwm_near;//这是无敌逍哥的代码
+    //u16 pwm_temp = speed_up_rate ;
+    if (ccd_light_width >= 2) { //其次用线阵CCD判断距离 //原来是>=2
+    
+       // g_MotorPWM[left] =   6000*(50.0-0.9*ccd_light_width)/50.0  + 0.15*((ccd_light_centre-64.0)/3.0)*((ccd_light_centre-64.0)/3.0)*((ccd_light_centre-64.0)/3.0);//出现了在刚找到光的时候会停车的问题。
+        //g_MotorPWM[right] =  6000*(50.0-0.9*ccd_light_width)/50.0  - 0.15*((ccd_light_centre-64.0)/3.0)*((ccd_light_centre-64.0)/3.0)*((ccd_light_centre-64.0)/3.0);
+    
+      
+        g_MotorPWM[left] = pwm_temp * (1.0 - (128 - ccd_light_centre) * 0.4 / 128);
+        g_MotorPWM[right] = pwm_temp * (1.0 - (ccd_light_centre) * 0.4 / 128);    //这是无敌逍哥的代码
         ccd_last_direction = ccd_light_centre > ccd_light_middle;
     }
     // 如果距离接近，停车50ms后进入灭灯模式
-    if (distance[0] <= near_distance_range-10 || distance[1] <= near_distance_range || distance[2] <= near_distance_range-10) {
+    if (distance[0] <= near_distance_range-20 || distance[1] <= near_distance_range || distance[2] <= near_distance_range-20) {
         if (!near_flag) { //如果第一次进入灭灯模式，先停车200ms
             g_MotorBrake[left] = 1;
             g_MotorBrake[right] = 1;
@@ -572,12 +585,23 @@ void decide_speed()
             g_MotorPWM[left] = ccd_light_centre * 1.0 / (128) * pwm_min;
             g_MotorPWM[right] = pwm_min - g_MotorPWM[left];
         }
+        if (ccd_light_width <= 45) {
+            //距离灯还有一定距离，需要避障
+            if (distance[0] < distance[2]) {
+                //障碍物在左边，右转
+                g_MotorPWM[right] *= 0.8;
+            }
+            if (distance[0] > distance[2]) {
+                //障碍物在右边，左转
+                g_MotorPWM[left] *= 0.8;
+            }
+        }
         if (ccd_light_width <= 15) //已经灭灯
         {
             //如果刹车，先把刹车退了
             g_MotorBrake[left] = 0;
             g_MotorBrake[right] = 0;
-            //倒车0.4s
+            //倒车
             back_start_time = TimeCount;
             near_flag = 0;
             move_back_direction = distance[0] > distance[1]; //左0右1
@@ -587,13 +611,17 @@ void decide_speed()
 
         }
     }
-    // 倒车，持续时间都是0.4s
+    // 倒车，持续时间都是0.8s
     if (move_back_flag) {
         g_MotorPWM[left] = -pwm_back;
         g_MotorPWM[right] = -pwm_back;
-        g_MotorPWM[move_back_direction] = g_MotorPWM[move_back_direction]* 0.75;
-        if ((TimeCount - back_start_time + TimeCount_Max) % TimeCount_Max > 400) {
-            //已经倒车0.4s，需要回到正常状态
+        g_MotorPWM[move_back_direction] = g_MotorPWM[1-move_back_direction]* 1.5;
+        if (!gpio_get(PORTA, 12) || !gpio_get(PORTA, 13)){
+            //倒车时后方对管检测到障碍物，停止倒车
+            move_back_flag = 0;
+        }
+        if ((TimeCount - back_start_time + TimeCount_Max) % TimeCount_Max > 800) {
+            //已经倒车，需要回到正常状态
             move_back_flag = 0;
         }
     }

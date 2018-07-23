@@ -1,0 +1,38 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+UART0	.\uart.h	/^    UART0,    \/\/           PTD7         PTD6$/;"	e	enum:UARTn
+UART1	.\uart.h	/^    UART1,    \/\/           PTC4         PTC3$/;"	e	enum:UARTn
+UART2	.\uart.h	/^    UART2,    \/\/           PTD3         PTD2$/;"	e	enum:UARTn
+UART3	.\uart.h	/^    UART3,    \/\/           PTC17        PTC16$/;"	e	enum:UARTn
+UART4	.\uart.h	/^    UART4,    \/\/           PTE24        PTE25$/;"	e	enum:UARTn
+UART5	.\uart.h	/^    UART5     \/\/           PTE8         PTE9$/;"	e	enum:UARTn
+UART_IRQ_DIS	.\uart.h	47;"	d
+UART_IRQ_EN	.\uart.h	46;"	d
+UARTn	.\uart.h	/^typedef enum  UARTn$/;"	g
+UARTn	.\uart.h	/^} UARTn;$/;"	t	typeref:enum:UARTn
+UARTx	.\uart.c	/^volatile struct UART_MemMap *UARTx[6] = {UART0_BASE_PTR, UART1_BASE_PTR, UART2_BASE_PTR, UART3_BASE_PTR, UART4_BASE_PTR, UART5_BASE_PTR}; \/\/定义五个指针数组保存 UARTx 的地址$/;"	v	typeref:struct:UART_MemMap
+__UART_H__	.\uart.h	10;"	d
+uart_getchar	.\uart.c	/^char uart_getchar (UARTn uartn)$/;"	f	signature:(UARTn uartn)
+uart_getchar	.\uart.h	/^char uart_getchar   (UARTn);                          \/\/无限等待接受1个字节$/;"	p	signature:(UARTn)
+uart_init	.\uart.c	/^void uart_init (UARTn uartn, u32 baud)$/;"	f	signature:(UARTn uartn, u32 baud)
+uart_init	.\uart.h	/^void uart_init (UARTn, u32 baud);                     \/\/初始化uartx模块$/;"	p	signature:(UARTn, u32 baud)
+uart_irq_DIS	.\uart.c	/^void uart_irq_DIS(UARTn uartn)$/;"	f	signature:(UARTn uartn)
+uart_irq_DIS	.\uart.h	/^void uart_irq_DIS   (UARTn);                          \/\/关串口接收中断$/;"	p	signature:(UARTn)
+uart_irq_EN	.\uart.c	/^void uart_irq_EN(UARTn uartn)$/;"	f	signature:(UARTn uartn)
+uart_irq_EN	.\uart.h	/^void uart_irq_EN    (UARTn);                          \/\/开串口接收中断$/;"	p	signature:(UARTn)
+uart_pendchar	.\uart.c	/^char uart_pendchar (UARTn uartn, char *ch)$/;"	f	signature:(UARTn uartn, char *ch)
+uart_pendchar	.\uart.h	/^char uart_pendchar  (UARTn, char *ch);                \/\/有限时间等待接收一个字符$/;"	p	signature:(UARTn, char *ch)
+uart_pendstr	.\uart.c	/^char uart_pendstr (UARTn uartn, char *str)$/;"	f	signature:(UARTn uartn, char *str)
+uart_pendstr	.\uart.h	/^char uart_pendstr   (UARTn, char *str);               \/\/有限时间等待接收字符串$/;"	p	signature:(UARTn, char *str)
+uart_putchar	.\uart.c	/^void uart_putchar (UARTn uartn, char ch)$/;"	f	signature:(UARTn uartn, char ch)
+uart_putchar	.\uart.h	/^void uart_putchar   (UARTn, char ch);                 \/\/发送1个字节$/;"	p	signature:(UARTn, char ch)
+uart_query	.\uart.c	/^int uart_query (UARTn uartn)$/;"	f	signature:(UARTn uartn)
+uart_query	.\uart.h	/^int uart_query      (UARTn);                          \/\/查询是否接收到一个字节$/;"	p	signature:(UARTn)
+uart_sendN	.\uart.c	/^void uart_sendN (UARTn uartn, uint8 *buff, uint16 len)$/;"	f	signature:(UARTn uartn, uint8 *buff, uint16 len)
+uart_sendN	.\uart.h	/^void uart_sendN     (UARTn , uint8 *buff, uint16 len); \/\/发送n个字节$/;"	p	signature:(UARTn , uint8 *buff, uint16 len)
+uart_sendStr	.\uart.c	/^void uart_sendStr (UARTn uartn, const u8 *str)$/;"	f	signature:(UARTn uartn, const u8 *str)
+uart_sendStr	.\uart.h	/^void uart_sendStr   (UARTn , const u8 *str);          \/\/发送字符串$/;"	p	signature:(UARTn , const u8 *str)

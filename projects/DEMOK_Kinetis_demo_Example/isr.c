@@ -114,27 +114,20 @@ void USART4_IRQHandler(void)
 void PIT0_IRQHandler(void) //1ms
 {
     PIT_Flag_Clear(PIT0); //清中断标志位
-    TimeCount += 10;
+    TimeCount += 8;
     if (TimeCount >= TimeCount_Max)
         TimeCount -= TimeCount_Max; //最大定时时间1000s
     if (!ccd_upload_flag) {
-        if (TimeCount % 10 == 0){
+        if (TimeCount % 8 == 0){
             ccd_gather();
             ccd_proc();
             ccd_init();
             gpio_turn(PORTE, 12);
         }
-        if (enccd && TimeCount % 50 == 0) {
+        if (enccd && TimeCount % 40 == 0) {
             ccd_upload_flag = 1;
         }
     }
-    //统计刹车时间，如果刹车过长，则进入原地打转
-    if (TimeCount % 1000) {
-        brake_times = 0; //每1s清零一次刹车计数
-        too_much_brake_flag = 0;
-    }
-    if (g_MotorBrake[0]) brake_times ++;
-    if (brake_times >= 80) too_much_brake_flag = 1;
     
 }
 
